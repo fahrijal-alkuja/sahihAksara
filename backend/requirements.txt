@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+transformers
+torch --index-url https://download.pytorch.org/whl/cpu
+python-multipart
+python-dotenv
+pydantic
+pydantic-settings
+requests
+python-docx
+pymupdf
+fpdf2
+passlib[bcrypt]
+python-jose[cryptography]
+email-validator

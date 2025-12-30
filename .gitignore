@@ -1,0 +1,33 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
+
+# Node / Nuxt
+node_modules/
+.nuxt/
+.output/
+dist/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Databases
+backend/*.db
+backend/*.sqlite3
