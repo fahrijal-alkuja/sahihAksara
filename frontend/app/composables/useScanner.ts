@@ -29,6 +29,8 @@ export const useScanner = () => {
       
       if (err.status === 403) {
         showModal(msg, 'warning', 'Upgrade ke Pro Sekarang', '/pricing')
+      } else if (err.status === 400 && msg.includes('Bahasa Indonesia')) {
+        showModal(msg, 'info')
       } else {
         error(msg)
       }
@@ -61,6 +63,8 @@ export const useScanner = () => {
       
       if (err.status === 403) {
         showModal(msg, 'warning', 'Upgrade ke Pro Sekarang', '/pricing')
+      } else if (err.status === 400 && msg.includes('Bahasa Indonesia')) {
+        showModal(msg, 'info')
       } else {
         error(msg)
       }

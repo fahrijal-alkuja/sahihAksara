@@ -3,6 +3,8 @@ from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from langdetect import detect, DetectorFactory
+DetectorFactory.seed = 0 # For consistent results
 from sqlalchemy.orm import Session
 import uvicorn
 import io
@@ -115,6 +117,20 @@ async def analyze_text(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    # 0. Language Guard: Check if text is Indonesian
+    try:
+        lang = detect(request.text_content)
+        if lang == 'en':
+            raise HTTPException(
+                status_code=400,
+                detail="SahihAksara dioptimasi khusus untuk mendeteksi struktur dan pola Bahasa Indonesia guna menjamin akurasi 99%. Kami mendeteksi naskah Anda menggunakan Bahasa Inggris. Untuk hasil terbaik, silakan gunakan teks berbahasa Indonesia atau detektor internasional."
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        # Ignore detection errors for very short or non-textual content, fallback to analyzer
+        pass
+
     # 1. Freemium Logic: Check Word Count
     words = request.text_content.split()
     word_count = len(words)
@@ -209,9 +225,23 @@ async def analyze_file(
         raise HTTPException(status_code=400, detail=str(e))
     
     if not text.strip():
-        raise HTTPException(status_code=400, detail="Gagal mengekstrak teks dari file.")
+        raise HTTPException(status_code=400, detail="Gagal mengekstrak teks dari berkas.")
 
-    # 2. Tier Checks (Word Count & Quota for Free)
+    # 0. Language Guard
+    try:
+        lang = detect(text) 
+        if lang == 'en':
+            raise HTTPException(
+                status_code=400,
+                detail="SahihAksara dioptimasi khusus untuk mendeteksi struktur dan pola Bahasa Indonesia guna menjamin akurasi 99%. Kami mendeteksi naskah Anda menggunakan Bahasa Inggris. Untuk hasil terbaik, silakan gunakan teks berbahasa Indonesia atau detektor internasional."
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
+    # 1. Freemium Logic
+    # Tier Checks (Word Count & Quota for Free)
     words = text.split()
     word_count = len(words)
     
