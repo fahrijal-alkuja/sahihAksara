@@ -1,24 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-950 font-sans text-slate-200 selection:bg-purple-500/30 selection:text-white">
-    <!-- Navbar (Consistent with index.vue) -->
-    <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
-      <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <NuxtLink to="/" class="flex items-center gap-4 group transition-transform hover:scale-105 active:scale-95">
-          <img src="/logo.png" alt="SahihAksara" class="w-10 h-10 rounded-xl bg-white p-1 border border-white/10 shadow-lg" />
-          <span class="text-xl font-bold tracking-tight text-white font-heading">SahihAksara</span>
-        </NuxtLink>
-        <div class="hidden md:flex items-center gap-10">
-          <NuxtLink to="/" class="text-[11px] font-black text-slate-400 hover:text-white transition-all uppercase tracking-[0.2em]">Beranda</NuxtLink>
-          <NuxtLink to="/" class="text-[11px] font-black text-slate-400 hover:text-white transition-all uppercase tracking-[0.2em]">Analisis Teks</NuxtLink>
-          <NuxtLink to="/cara-kerja" class="text-[11px] font-black text-white transition-all uppercase tracking-[0.2em] relative after:absolute after:-bottom-2 after:left-0 after:w-full after:h-0.5 after:bg-purple-500 after:rounded-full">Cara Kerja</NuxtLink>
-        </div>
-        <NuxtLink to="/" class="px-6 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest text-white hover:bg-slate-800 transition-all active:scale-95 shadow-lg">
-          Mulai Gratis
-        </NuxtLink>
-      </div>
-    </nav>
-
-    <main class="pt-32 pb-24 px-6">
+    <main class="py-12 px-6">
       <div class="max-w-4xl mx-auto space-y-20">
         <!-- Hero Section -->
         <section class="text-center space-y-6">
@@ -148,9 +130,6 @@
 </template>
 
 <script setup>
-definePageMeta({
-  layout: false
-})
 </script>
 
 <style scoped>

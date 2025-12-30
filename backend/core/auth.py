@@ -68,6 +68,12 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     
+    if user.is_active == 0:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Node ini sedang dibatasi (restricted) oleh administrator."
+        )
+    
     # Auto-downgrade if PRO expired
     if user.role == "pro" and user.pro_expires_at:
         if datetime.utcnow() > user.pro_expires_at:

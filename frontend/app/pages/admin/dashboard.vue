@@ -292,8 +292,14 @@ definePageMeta({
                 </div>
               </td>
               <td class="px-10 py-8 align-middle text-right">
-                <button class="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-content-muted hover:text-red-400 border border-white/5 hover:border-red-400/20 rounded-xl transition-all bg-white/[0.02] hover:bg-red-400/5 shadow-sm">
-                  Restrict Node
+                <button 
+                  @click="updateUser(u.id, { is_active: u.is_active === 1 ? 0 : 1 })"
+                  :class="u.is_active === 0 
+                    ? 'text-emerald-400 hover:text-emerald-300 border-emerald-500/20 hover:border-emerald-400/50 hover:bg-emerald-400/10' 
+                    : 'text-content-muted hover:text-red-400 border-white/5 hover:border-red-400/20 hover:bg-red-400/5'"
+                  class="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest border rounded-xl transition-all shadow-sm bg-white/[0.02]"
+                >
+                  {{ u.is_active === 0 ? 'Restore Node' : 'Restrict Node' }}
                 </button>
               </td>
             </tr>

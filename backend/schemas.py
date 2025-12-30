@@ -18,6 +18,7 @@ class UserResponse(UserBase):
     id: int
     role: str
     daily_quota: int
+    is_active: int
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -25,6 +26,7 @@ class UserResponse(UserBase):
 class UserAdminUpdate(BaseModel):
     role: Optional[str] = None
     daily_quota: Optional[int] = None
+    is_active: Optional[int] = None
 
 class AdminStats(BaseModel):
     total_users: int

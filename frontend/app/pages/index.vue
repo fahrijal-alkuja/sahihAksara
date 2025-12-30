@@ -51,10 +51,10 @@ const getStrokeColor = (score) => {
 }
 
 const getHighlightColor = (score) => {
-  if (score > 70) return 'bg-red-500/20 text-red-100 ring-1 ring-red-500/30'
-  if (score > 40) return 'bg-orange-500/15 text-orange-100 ring-1 ring-orange-500/20'
-  if (score > 15) return 'bg-amber-500/10 text-amber-100/90'
-  return 'text-emerald-400/90 hover:bg-emerald-500/5 transition-colors'
+  if (score === -1) return 'bg-blue-500/20 text-blue-400 border border-blue-500/30' // Non-ID marker
+  if (score > 70) return 'bg-red-500/20 text-red-500'
+  if (score > 40) return 'bg-amber-500/20 text-amber-500'
+  return 'bg-emerald-500/20 text-emerald-500'
 }
 
 const analysisSummary = computed(() => {
@@ -254,6 +254,10 @@ onMounted(() => {
                   <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Human</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]"></span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Non-ID</span>
                   </div>
                 </div>
               </div>

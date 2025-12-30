@@ -122,12 +122,8 @@ class AIDetector:
         Cleans extraction artifacts like physical line breaks from layout.
         Reconstructs sentences and paragraphs.
         """
-        # 0. Strip non-ASCII/garbage but keep key punctuation and whitespace
-        # ord(10)=LF, ord(13)=CR, ord(32)=Space
-        temp = "".join(i for i in text if ord(i) < 128 or i in ".,!? ")
-        
         # 1. Normalize line breaks: double \n is paragraph, single \n is space
-        temp = temp.replace("\r\n", "\n").replace("\n\n", "||PARA||")
+        temp = text.replace("\r\n", "\n").replace("\n\n", "||PARA||")
         temp = temp.replace("\n", " ").replace("\t", " ")
         temp = temp.replace("||PARA||", "\n\n")
         
@@ -153,15 +149,22 @@ class AIDetector:
         is_hybrid = total_tokens > (max_len * 4) and not force_full_scan 
         partially_analyzed = False
         
-        # 1. Sentence Analysis (Refined for V3.6)
-        raw_sentences = [s.strip() for s in re.split(r'([.!?\n]+)', clean_text)]
-        processed_sentences = []
-        for i in range(0, len(raw_sentences)-1, 2):
-            s = raw_sentences[i] + raw_sentences[i+1]
-            if len(s.strip()) > 8: processed_sentences.append(s.strip())
-        if len(raw_sentences) % 2 != 0 and len(raw_sentences[-1].strip()) > 8:
-            processed_sentences.append(raw_sentences[-1].strip())
-
+        # 1. Improved Sentence Analysis (V4.2 - Granular Language Guard)
+        # We split by sentence endings followed by a capital/quote, 
+        # AND we also isolate text within quotes as separate segments.
+        parts = re.split(r'([.!?]\s+(?=[A-Z"“])|["“][^"”]*["”])', clean_text)
+        raw_sentences = []
+        for p in parts:
+            if not p: continue
+            if p.startswith(('"', '“')) and p.endswith(('"', '”')):
+                raw_sentences.append(p.strip())
+            else:
+                # Further split non-quote parts by sentences
+                sub_parts = re.split(r'(?<=[.!?])\s+(?=[A-Z"“])', p)
+                raw_sentences.extend([s.strip() for s in sub_parts if s.strip()])
+        
+        processed_sentences = [s for s in raw_sentences if len(s) > 5]
+        
         if not processed_sentences: processed_sentences = [clean_text]
         
         # Determine which sentences to scan
@@ -189,9 +192,29 @@ class AIDetector:
         ai_weights = 0
         total_weight = 0
         
+        from langdetect import detect
+        
         scanned_map = {s_text: res for s_text, res in zip(sentences_to_scan, sent_results)}
         
         for s_text in processed_sentences[:150]:
+            # Detect language per sentence
+            is_english = False
+            try:
+                # Only run detection if sentence has enough length for accuracy
+                if len(s_text.split()) > 3:
+                    if detect(s_text) == 'en':
+                        is_english = True
+            except:
+                pass
+
+            if is_english:
+                detailed.append({
+                    "text": s_text,
+                    "score": -1.0, # Special marker for Non-Indonesian
+                    "language": "en"
+                })
+                continue
+
             if s_text in scanned_map:
                 f = scanned_map[s_text]
                 s_loss = f["loss"]

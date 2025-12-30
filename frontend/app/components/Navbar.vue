@@ -48,6 +48,14 @@ onMounted(() => {
           Pricing
           <span class="absolute bottom-0 left-0 h-0.5 bg-purple-500 rounded-full transition-all" :class="isPageActive('/pricing') ? 'w-full' : 'w-0 group-hover:w-full'"></span>
         </NuxtLink>
+        <NuxtLink to="/cara-kerja" class="hover:text-white transition-all relative group py-2" :class="{ 'text-white': isPageActive('/cara-kerja') }">
+          Cara Kerja
+          <span class="absolute bottom-0 left-0 h-0.5 bg-purple-500 rounded-full transition-all" :class="isPageActive('/cara-kerja') ? 'w-full' : 'w-0 group-hover:w-full'"></span>
+        </NuxtLink>
+        <NuxtLink to="/kebijakan-privasi" class="hover:text-white transition-all relative group py-2" :class="{ 'text-white': isPageActive('/kebijakan-privasi') }">
+          Privasi
+          <span class="absolute bottom-0 left-0 h-0.5 bg-purple-500 rounded-full transition-all" :class="isPageActive('/kebijakan-privasi') ? 'w-full' : 'w-0 group-hover:w-full'"></span>
+        </NuxtLink>
         <NuxtLink v-if="isAuthenticated" to="/dashboard" class="hover:text-white transition-all relative group py-2" :class="{ 'text-white': isPageActive('/dashboard') && !isAdmin }">
           Dashboard
           <span class="absolute bottom-0 left-0 h-0.5 bg-purple-500 rounded-full transition-all" :class="isPageActive('/dashboard') && !isAdmin ? 'w-full' : 'w-0 group-hover:w-full'"></span>

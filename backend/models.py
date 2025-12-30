@@ -12,6 +12,7 @@ class User(Base):
     full_name = Column(String)
     role = Column(String, default="free") # free, pro, admin
     daily_quota = Column(Integer, default=5)
+    is_active = Column(Integer, default=1) # 1 for active, 0 for restricted (using Integer for SQLite compatibility or just to be safe)
     pro_expires_at = Column(DateTime, nullable=True) # For Day Pass / Monthly expiry
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

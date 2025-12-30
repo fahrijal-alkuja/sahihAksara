@@ -502,6 +502,8 @@ def admin_update_user(
         db_user.role = update.role
     if update.daily_quota is not None:
         db_user.daily_quota = update.daily_quota
+    if update.is_active is not None:
+        db_user.is_active = update.is_active
         
     db.commit()
     db.refresh(db_user)

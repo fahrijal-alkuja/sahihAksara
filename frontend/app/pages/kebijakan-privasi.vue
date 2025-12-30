@@ -1,24 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-950 font-sans text-slate-200 selection:bg-purple-500/30 selection:text-white">
-    <!-- Navbar (Consistent) -->
-    <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
-      <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <NuxtLink to="/" class="flex items-center gap-4 group transition-transform hover:scale-105 active:scale-95">
-          <img src="/logo.png" alt="SahihAksara" class="w-10 h-10 rounded-xl bg-white p-1 border border-white/10 shadow-lg" />
-          <span class="text-xl font-bold tracking-tight text-white font-heading">SahihAksara</span>
-        </NuxtLink>
-        <div class="hidden md:flex items-center gap-10">
-          <NuxtLink to="/" class="text-[11px] font-black text-slate-400 hover:text-white transition-all uppercase tracking-[0.2em]">Beranda</NuxtLink>
-          <NuxtLink to="/" class="text-[11px] font-black text-slate-400 hover:text-white transition-all uppercase tracking-[0.2em]">Analisis Teks</NuxtLink>
-          <NuxtLink to="/cara-kerja" class="text-[11px] font-black text-slate-400 hover:text-white transition-all uppercase tracking-[0.2em]">Cara Kerja</NuxtLink>
-        </div>
-        <NuxtLink to="/" class="px-6 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest text-white hover:bg-slate-800 transition-all active:scale-95 shadow-lg">
-          Mulai Gratis
-        </NuxtLink>
-      </div>
-    </nav>
-
-    <main class="pt-32 pb-24 px-6">
+    <main class="py-12 px-6">
       <div class="max-w-3xl mx-auto space-y-16">
         <section class="space-y-4">
           <h1 class="text-3xl md:text-4xl font-black text-white font-heading tracking-tight">Kebijakan Privasi</h1>
@@ -36,14 +18,50 @@
             </p>
           </div>
 
-          <div class="space-y-6">
-            <h2 class="text-xl font-bold text-white font-heading flex items-center gap-3 px-2">
-              <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
-              Data Terenkripsi
+          <div class="glass-card rounded-[2.5rem] p-10 border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent relative overflow-hidden group">
+            <div class="absolute -right-12 -top-12 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all"></div>
+            
+            <h2 class="text-2xl font-black text-white font-heading flex items-center gap-4 mb-6">
+              <div class="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center text-purple-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              Zero-Retention Policy
             </h2>
-            <p class="text-slate-400 leading-relaxed font-light px-2">
-              Kami memahami sensitivitas teks yang Anda analisis. Semua teks yang dikirimkan untuk pemindaian diproses secara aman. Kami tidak menyimpan teks Anda secara permanen setelah analisis selesai, kecuali jika Anda secara eksplisit menyimpannya dalam riwayat sesi lokal Anda.
-            </p>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+              <div class="space-y-4">
+                <h3 class="text-sm font-black text-purple-400 uppercase tracking-widest">Proteksi Konten</h3>
+                <ul class="space-y-3">
+                  <li class="flex items-start gap-3 text-sm text-slate-400 font-light">
+                    <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 shrink-0"></span>
+                    <span><strong>Immediate Purge:</strong> Isi teks Anda langsung dipotong dan diganti label proteksi di database segera setelah analisa selesai.</span>
+                  </li>
+                  <li class="flex items-start gap-3 text-sm text-slate-400 font-light">
+                    <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 shrink-0"></span>
+                    <span><strong>1-Hour Heatmap:</strong> Detail lokasi AI (heatmap) hanya disimpan selama 60 menit untuk kebutuhan unduh laporan, lalu dihapus total.</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="space-y-4">
+                <h3 class="text-sm font-black text-blue-400 uppercase tracking-widest">Proteksi Sesi</h3>
+                <ul class="space-y-3">
+                  <li class="flex items-start gap-3 text-sm text-slate-400 font-light">
+                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 shrink-0"></span>
+                    <span><strong>IP Anonymization:</strong> Alamat IP dalam log server disamarkan otomatis untuk mencegah pelacakan identitas.</span>
+                  </li>
+                  <li class="flex items-start gap-3 text-sm text-slate-400 font-light">
+                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 shrink-0"></span>
+                    <span><strong>Auto-Expiry:</strong> Seluruh riwayat metadata yang tersisa akan dihapus permanen secara otomatis setelah 7 hari.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-white/5">
+              <p class="text-[11px] text-slate-500 font-medium italic leading-relaxed">
+                "Kami membangun SahihAksara dengan filosofi bahwa data Anda adalah milik Anda. Privasi bukanlah fitur opsional, melainkan pondasi dari sistem kami."
+              </p>
+            </div>
           </div>
 
           <div class="space-y-6">
@@ -52,7 +70,7 @@
               Penggunaan Data
             </h2>
             <p class="text-slate-400 leading-relaxed font-light px-2">
-              Data statistik anonim dapat digunakan untuk meningkatkan akurasi model deteksi IndoBERT kami. Data ini tidak akan pernah dikaitkan dengan identitas pribadi Anda.
+              Data statistik anonim (seperti persentase AI tanpa teks asli) dapat digunakan untuk meningkatkan akurasi model deteksi IndoBERT kami. Data ini tidak akan pernah dikaitkan dengan identitas pribadi Anda.
             </p>
           </div>
 
@@ -62,7 +80,7 @@
               Hak Kekayaan Intelektual
             </h2>
             <p class="text-slate-400 leading-relaxed font-light px-2">
-              Teks yang Anda kirimkan tetap menjadi milik Anda sepenuhnya. SahihAksara tidak mengklaim hak kepemilikan apa pun atas konten yang dianalisis melalui platform kami.
+              Teks yang Anda kirimkan tetap menjadi milik Anda sepenuhnya. SahihAksara tidak mengklaim hak kepemilikan apa pun atas konten yang dianalisis melalui lingkungan kami.
             </p>
           </div>
 
@@ -122,9 +140,6 @@
 </template>
 
 <script setup>
-definePageMeta({
-  layout: false
-})
 </script>
 
 <style scoped>
