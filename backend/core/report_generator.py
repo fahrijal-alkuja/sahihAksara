@@ -75,8 +75,12 @@ class ReportGenerator:
         pdf.line(10, 42, 200, 42)
         
         # --- VERIFICATION QR ---
-        # Concept: Verify on portal
-        verification_url = f"https://sahihaksara.id/verify/{datetime.now().timestamp()}"
+        # Live Verification Link (Points to our public verify endpoint)
+        scan_id = scan_data.get("id", 0)
+        # Note: In production, this should be the real domain
+        base_url = os.getenv("APP_URL", "https://sahihaksara.id")
+        verification_url = f"{base_url}/verify/{scan_id}"
+        
         qr_path = self._generate_qr(verification_url)
         pdf.image(qr_path, 175, 45, 25, 25)
         os.unlink(qr_path) # Cleanup
@@ -164,6 +168,7 @@ class ReportGenerator:
             insight_text = "- Sistem mendeteksi tanda-tanda kuat otomatisasi linguistik. Struktur argumen dan frekuensi kata menunjukkan pola yang sangat mirip dengan keluaran AI generasi terbaru."
         elif not insight_text:
             insight_text = "- Sistem mendeteksi variasi linguistik yang sehat. Pola kalimat acak dan memiliki karakteristik humanis yang kuat."
+        insight_bg = (248, 250, 252) # Slate 50
 
         # Calculate dynamic height for insight box
         # Each line is roughly 6 units, plus padding

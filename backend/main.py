@@ -1,7 +1,7 @@
 from typing import List, Optional
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, status
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, BackgroundTasks, Form, status
+from fastapi.responses import JSONResponse, Response, HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from langdetect import detect, DetectorFactory
 DetectorFactory.seed = 0 # For consistent results
@@ -326,6 +326,7 @@ async def generate_report(
     
     # Prepare data for report generator
     scan_data = {
+        "id": scan.id,
         "ai_probability": scan.ai_probability,
         "status": scan.status,
         "perplexity": scan.perplexity,
@@ -335,7 +336,10 @@ async def generate_report(
         "ai_count": scan.ai_count,
         "para_count": scan.para_count,
         "mix_count": scan.mix_count,
-        "human_count": scan.human_count
+        "human_count": scan.human_count,
+        "opinion_semantic": scan.opinion_semantic,
+        "opinion_perplexity": scan.opinion_perplexity,
+        "opinion_burstiness": scan.opinion_burstiness
     }
     
     # Generate PDF
@@ -636,6 +640,91 @@ def admin_update_setting(
         db.refresh(setting)
     
     return setting
+
+@app.get("/verify/{scan_id}", response_class=HTMLResponse)
+async def verify_report(scan_id: int, db: Session = Depends(database.get_db)):
+    # Public verification of report authenticity
+    scan = db.query(models.ScanResult).filter(models.ScanResult.id == scan_id).first()
+    
+    if not scan:
+        return """
+        <html>
+            <head>
+                <title>Laporan Tidak Valid | SahihAksara</title>
+                <style>
+                    body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #fef2f2; }
+                    .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); text-align: center; }
+                    h1 { color: #ef4444; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h1>❌ Laporan Tidak Terverifikasi</h1>
+                    <p>ID Laporan tidak ditemukan dalam sistem kami.</p>
+                </div>
+            </body>
+        </html>
+        """
+
+    # Format Date
+    formatted_date = scan.created_at.strftime("%B %d, %Y")
+    status_color = "#ef4444" if scan.ai_probability > 75 else "#f59e0b" if scan.ai_probability > 40 else "#10b981"
+
+    # Minimalist verified UI
+    return f"""
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verifikasi Laporan SahihAksara</title>
+        <style>
+            :root {{
+                --primary: #7c3aed;
+                --emerald: #10b981;
+                --slate: #1e293b;
+            }}
+            body {{ font-family: 'Inter', -apple-system, sans-serif; background: #f8fafc; color: var(--slate); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }}
+            .card {{ background: white; max-width: 450px; width: 100%; padding: 40px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden; }}
+            .card::before {{ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--primary); }}
+            .icon-check {{ width: 64px; height: 64px; background: #dcfce7; color: var(--emerald); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 24px; }}
+            h1 {{ font-size: 24px; margin: 0 0 8px; color: var(--slate); }}
+            .verified-tag {{ color: var(--emerald); font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; display: block; }}
+            .info-box {{ background: #f1f5f9; padding: 24px; border-radius: 16px; margin: 24px 0; }}
+            .label {{ font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }}
+            .value {{ font-size: 20px; font-weight: 700; color: var(--slate); }}
+            .score-badge {{ display: inline-block; padding: 4px 12px; border-radius: 999px; font-weight: 700; color: white; background: {status_color}; margin-top: 8px; }}
+            .footer {{ font-size: 12px; color: #94a3b8; margin-top: 32px; }}
+            .logo {{ font-weight: 800; color: var(--primary); font-size: 18px; margin-bottom: 32px; display: block; }}
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <span class="logo">SahihAksara</span>
+            <div class="icon-check">✓</div>
+            <h1>Laporan Asli (Verified)</h1>
+            <span class="verified-tag">Dokumen Terverifikasi Digital</span>
+            
+            <div class="info-box">
+                <span class="label">ID Laporan #000{scan.id}</span>
+                <span class="value">{formatted_date}</span>
+                <br><br>
+                <span class="label">Hasil Analisis</span>
+                <span class="value">{scan.status}</span>
+                <br>
+                <div class="score-badge">{scan.ai_probability}% AI Probability</div>
+            </div>
+
+            <p style="font-size: 13px; color: #64748b; line-height: 1.6;">Laporan ini dinyatakan asli dan dikeluarkan oleh sistem SahihAksara AI Detector. Seluruh data pada dokumen fisik sesuai dengan record digital kami.</p>
+            
+            <div class="footer">
+                &copy; 2025 SahihAksara Integrity System<br>
+                Universitas Kutai Kartanegara
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
