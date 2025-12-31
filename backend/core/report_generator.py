@@ -5,7 +5,13 @@ import tempfile
 from datetime import datetime
 
 class PDF(FPDF):
+    def __init__(self, *args, **kwargs):
+        self.show_footer = kwargs.pop('show_footer', True)
+        super().__init__(*args, **kwargs)
+
     def footer(self):
+        if not self.show_footer:
+            return
         # Position at 1.5 cm from bottom
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
@@ -274,49 +280,60 @@ class ReportGenerator:
         """
         Generate a formal landscape-oriented Certificate of Authenticity.
         """
-        # A4 Landscape: 297 x 210 mm
-        pdf = PDF(orientation='L', unit='mm', format='A4')
+        # A4 Landscape: 297 x 210 mm | Disable auto-footer
+        pdf = PDF(orientation='L', unit='mm', format='A4', show_footer=False)
+        pdf.set_auto_page_break(False) # Prevent unexpected page jumps
         pdf.add_page()
         
-        # --- BACKGROUND & BORDER ---
-        # Formal Double Border
-        pdf.set_draw_color(124, 58, 237) # Theme Purple
-        pdf.set_line_width(1.5)
-        pdf.rect(5, 5, 287, 200) # Outer
+        # --- NEW MODERN MOTIF BORDER ---
+        pdf.set_fill_color(248, 250, 252) # Slate 50 background
+        pdf.rect(0, 0, 297, 210, 'F')
         
+        # Corner Geometric Patterns (Modern Motif)
+        pdf.set_fill_color(124, 58, 237) # Purple
+        # Top Left
+        pdf.polygon([(0, 0), (40, 0), (0, 40)], 'F')
+        pdf.set_fill_color(79, 70, 229) # Blueish Purple
+        pdf.polygon([(0, 0), (25, 0), (0, 25)], 'F')
+        
+        # Bottom Right
+        pdf.set_fill_color(124, 58, 237)
+        pdf.polygon([(297, 210), (257, 210), (297, 170)], 'F')
+        pdf.set_fill_color(79, 70, 229)
+        pdf.polygon([(297, 210), (282, 210), (297, 195)], 'F')
+        
+        # Thin Side Lines
+        pdf.set_draw_color(124, 58, 237)
         pdf.set_line_width(0.5)
-        pdf.rect(8, 8, 281, 194) # Inner
-        
-        # --- DECORATIVE CORNERS (Simple lines) ---
-        # Top-Left
-        pdf.line(5, 25, 25, 5)
-        # Top-Right
-        pdf.line(272, 5, 292, 25)
+        pdf.line(10, 10, 287, 10) # Top
+        pdf.line(10, 200, 287, 200) # Bottom
+        pdf.line(10, 10, 10, 200) # Left
+        pdf.line(287, 10, 287, 200) # Right
         
         # --- HEADER ---
         if os.path.exists(self.logo_path):
-            pdf.image(self.logo_path, 135, 15, 25)
+            pdf.image(self.logo_path, 136, 18, 25)
             
-        pdf.set_xy(10, 45)
-        pdf.set_font("Arial", 'B', 32)
-        pdf.set_text_color(30, 41, 59)
+        pdf.set_xy(10, 48)
+        pdf.set_font("Arial", 'B', 36)
+        pdf.set_text_color(15, 23, 42) # Slate 900
         pdf.cell(0, 20, "CERTIFICATE OF AUTHENTICITY", ln=True, align='C')
         
-        pdf.set_font("Arial", 'I', 14)
+        pdf.set_font("Arial", 'I', 12)
         pdf.set_text_color(100, 116, 139)
-        pdf.cell(0, 10, "SahihAksara Digital Integrity Verification", ln=True, align='C')
+        pdf.cell(0, 5, "SahihAksara Digital Integrity Verification System", ln=True, align='C')
         
         # --- BODY ---
-        pdf.ln(10)
+        pdf.ln(15)
         pdf.set_font("Arial", '', 14)
-        pdf.set_text_color(51, 65, 85)
-        pdf.cell(0, 15, "Sertifikat ini diberikan secara resmi kepada:", ln=True, align='C')
+        pdf.set_text_color(71, 85, 105) # Slate 600
+        pdf.cell(0, 10, "Sertifikat ini diberikan secara resmi kepada:", ln=True, align='C')
         
-        pdf.set_font("Arial", 'B', 24)
+        pdf.set_font("Arial", 'B', 28)
         pdf.set_text_color(124, 58, 237)
-        pdf.cell(0, 20, self._sanitize_text(cert_data.get("full_name", "Verified User")).upper(), ln=True, align='C')
+        pdf.cell(0, 25, self._sanitize_text(cert_data.get("full_name", "Verified User")).upper(), ln=True, align='C')
         
-        pdf.set_font("Arial", '', 12)
+        pdf.set_font("Arial", '', 13)
         pdf.set_text_color(71, 85, 105)
         message = (
             f"Atas karya tulisannya yang telah melalui analisis deteksi AI SahihAksara "
@@ -331,32 +348,36 @@ class ReportGenerator:
         base_url = os.getenv("APP_URL", "https://sahihaksara.id")
         verification_url = f"{base_url}/verify/{scan_id}"
         qr_path = self._generate_qr(verification_url)
-        pdf.image(qr_path, 245, 155, 35, 35)
+        pdf.image(qr_path, 248, 155, 32, 32)
         os.unlink(qr_path)
         
         # "Gold Seal" Placeholder (Left)
-        pdf.set_fill_color(254, 243, 199) # Amber 100
-        pdf.set_draw_color(245, 158, 11) # Amber 500
-        pdf.circle(40, 172, 12, 'FD')
+        # Ribbon simulation
+        pdf.set_fill_color(245, 158, 11) # Amber 500
+        pdf.polygon([(25, 175), (35, 175), (30, 192)], 'F') # Ribbon 1
+        pdf.polygon([(45, 175), (55, 175), (50, 192)], 'F') # Ribbon 2
+        
+        pdf.set_fill_color(251, 191, 36) # Amber 400
+        pdf.circle(41, 172, 14, 'F') # Main Seal
         pdf.set_font("Arial", 'B', 8)
         pdf.set_text_color(146, 64, 14)
-        pdf.set_xy(30, 170)
-        pdf.cell(20, 5, "VERIFIED", align='C')
+        pdf.set_xy(31, 170)
+        pdf.cell(20, 5, "AUTHENTIC", align='C')
         
         # Details (Center)
-        pdf.set_xy(70, 155)
+        pdf.set_xy(70, 160)
         pdf.set_font("Arial", 'B', 10)
         pdf.set_text_color(100, 116, 139)
-        pdf.cell(100, 5, f"CERTIFICATE ID: SA-CERT-{datetime.now().strftime('%Y%m%d')}-000{scan_id}", ln=True, align='L')
+        pdf.cell(100, 5, f"SERIAL: SA-CERT-{datetime.now().strftime('%Y%m%d')}-000{scan_id}", ln=True, align='L')
         
-        pdf.set_xy(70, 162)
+        pdf.set_xy(70, 166)
         pdf.set_font("Arial", '', 10)
-        pdf.cell(100, 5, f"Issued Date: {cert_data.get('created_at')}", ln=True, align='L')
+        pdf.cell(100, 5, f"Verified on: {cert_data.get('created_at')}", ln=True, align='L')
         
-        # Fingerprint Footer
-        pdf.set_xy(10, 190)
-        pdf.set_font("Courier", '', 8)
+        # Fingerprint Footer (Very Bottom - Compact)
+        pdf.set_xy(10, 195)
+        pdf.set_font("Courier", '', 7)
         pdf.set_text_color(148, 163, 184)
-        pdf.cell(0, 10, f"SHA-256 Fingerprint: {cert_data.get('sha256_hash')}", align='C')
+        pdf.cell(0, 5, f"SHA-256 FINGERPRINT: {cert_data.get('sha256_hash')}", align='C')
         
         return bytes(pdf.output())
