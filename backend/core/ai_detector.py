@@ -213,6 +213,7 @@ class AIDetector:
         from langdetect import detect
         scanned_map = {s_text: res for s_text, res in zip(sentences_to_scan, sent_results)}
         
+        in_bibliography = False
         for s_text in processed_sentences[:150]:
             is_english = False
             try:
@@ -224,8 +225,14 @@ class AIDetector:
                 detailed.append({"text": s_text, "score": -1.0, "language": "en"})
                 continue
                 
+            # persistent bibliography check
+            if self.citation_handler.patterns["headers"].search(s_text):
+                h_match = self.citation_handler.patterns["headers"].search(s_text).group(0).upper()
+                if any(kw in h_match for kw in ["DAFTAR PUSTAKA", "REFERENCES", "BIBLIOGRAPHY", "WORKS CITED"]):
+                    in_bibliography = True
+
             # Check for citation
-            is_cite = self.citation_handler.is_citation(s_text)
+            is_cite = self.citation_handler.is_citation(s_text) or in_bibliography
             if is_cite:
                 citation_count += 1
 

@@ -44,6 +44,9 @@ class CitationHandler:
             # Citation/Bibliography Headers (APA, MLA, Chicago, etc.)
             "headers": re.compile(r'\b(DAFTAR PUSTAKA|REFERENCES|BIBLIOGRAPHY|DAFTAR RUJUKAN|CATATAN KAKI|FOOTNOTES|WORKS CITED|ABSTRACT|INTISARI|SARI|PENDAHULUAN|METODOLOGI|HASIL DAN PEMBAHASAN|KESIMPULAN|SUMMARY)\b', re.IGNORECASE),
 
+            # Bibliography Titles / Long Fragments (Title Case heavy)
+            "bib_title": re.compile(r'\b[A-Z][a-z]{2,}\b(\s\b[A-Z][a-z]{1,}\b){5,}', re.UNICODE),
+
             # Introductory phrases common in academic citations in Indonesian
             "intro_indonesian": re.compile(
                 r'\b(menurut|berdasarkan|seperti yang dinyatakan oleh|selaras dengan|merujuk pada|sesuai pasal|sebagaimana|seperti dikutip dari|dikemukakan oleh|pernyataan dari|diperoleh hasil|menunjukkan bahwa)\b', 
@@ -72,6 +75,7 @@ class CitationHandler:
             self.patterns["narrative_citation"].search(text) or 
             self.patterns["bracketed"].search(text) or
             self.patterns["bib_style"].search(text) or
+            self.patterns["bib_title"].search(text) or
             self.patterns["footnote_content"].search(text) or
             self.patterns["stat_data"].search(text) or
             self.patterns["footnote_markers"].search(text)):
