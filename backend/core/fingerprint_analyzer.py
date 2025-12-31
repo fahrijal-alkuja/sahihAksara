@@ -13,21 +13,23 @@ class FingerprintAnalyzer:
             "keywords": [
                 r"\bdelve\b", r"\bcomprehensive\b", r"\btransformative\b", 
                 r"\bvibrant\b", r"\btapestry\b", r"\bembark\b", 
-                r"\bmeticulous\b", r"\btestament\b", r"\bfoster\b"
+                r"\bmeticulous\b", r"\btestament\b", r"\bfoster\b",
+                r"\bcrucial\b", r"\belevate\b", r"\bunwavering\b"
             ],
             "threshold": 1
         },
         "Claude (Anthropic)": {
             "keywords": [
                 r"I understand that", r"Actually,", r"It's important to note",
-                r"however,", r"I apologize if", r"Let's look at this"
+                r"however,", r"I apologize if", r"Let's look at this",
+                r"from a certain perspective", r"while it is true that"
             ],
             "threshold": 2
         },
         "Gemini (Google)": {
             "keywords": [
                 r"\bHere are\b", r"\blet's explore\b", r"\bkey takeaway\b",
-                r"\bin summary\b", r"\bconsider this\b"
+                r"\bin summary\b", r"\bconsider this\b", r"\bdiving deeper\b"
             ],
             "threshold": 1
         }
@@ -55,8 +57,9 @@ class FingerprintAnalyzer:
         
         if not scores:
             # Fallback for general AI
-            if ai_probability > 80:
-                return "Generative AI (Undefined)"
+            # Lowered threshold to 50 to match 'Likely AI' status
+            if ai_probability >= 50:
+                return "Generative AI"
             return None
 
         # Return the model with the highest signature match
