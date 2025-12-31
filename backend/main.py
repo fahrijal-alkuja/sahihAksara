@@ -371,11 +371,11 @@ async def download_certificate(scan_id: int, db: Session = Depends(database.get_
     if scan.user_id != current_user.id and current_user.role != "admin":
          raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke sertifikat ini.")
     
-    # Threshold Check: Must be <= 30% AI
-    if scan.ai_probability > 30:
+    # Threshold Check: Must be <= 45% AI (Adjusted for Academic/Scientific Rigidity)
+    if scan.ai_probability > 45:
         raise HTTPException(
             status_code=400, 
-            detail=f"Sertifikat Keaslian hanya diterbitkan untuk skor AI di bawah 30% (Skor Anda: {scan.ai_probability}%)."
+            detail=f"Sertifikat Keaslian hanya diterbitkan untuk skor AI di bawah 45% (Skor Anda: {scan.ai_probability}%)."
         )
     
     # Prepare data
@@ -718,7 +718,7 @@ async def verify_report(scan_id: int, db: Session = Depends(database.get_db)):
     
     # Certificate Status
     cert_html = ""
-    if scan.ai_probability <= 30:
+    if scan.ai_probability <= 45:
         cert_html = """
         <div style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #fde68a;">
             <span>🏅</span> GOLD STATUS: Originality Certified
