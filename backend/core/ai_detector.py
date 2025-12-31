@@ -311,11 +311,12 @@ class AIDetector:
         else: status = "AI Generated"
         
         # Calculate granular counts for the return dict
-        # This replaces the logic that was partially moved to main.py
-        ai_count = sum(1 for s in detailed if s.get("score", 0) > 75)
-        para_count = sum(1 for s in detailed if 50 < s.get("score", 0) <= 75)
-        mix_count = sum(1 for s in detailed if 25 < s.get("score", 0) <= 50)
-        human_count = sum(1 for s in detailed if 0 <= s.get("score", 0) <= 25)
+        # We exclude citations from AI/Human category counts to avoid confusion
+        ai_count = sum(1 for s in detailed if not s.get("is_citation") and s.get("score", 0) > 75)
+        para_count = sum(1 for s in detailed if not s.get("is_citation") and 50 < s.get("score", 0) <= 75)
+        mix_count = sum(1 for s in detailed if not s.get("is_citation") and 25 < s.get("score", 0) <= 50)
+        human_count = sum(1 for s in detailed if not s.get("is_citation") and 0 <= s.get("score", 0) <= 25)
+        cit_count = sum(1 for s in detailed if s.get("is_citation"))
 
         # Fingerprint AI Source Stylometry
         ai_source = FingerprintAnalyzer.identify_source(text, final_prob)
@@ -331,6 +332,7 @@ class AIDetector:
             "para_count": para_count,
             "mix_count": mix_count,
             "human_count": human_count,
+            "citation_count": cit_count,
             "citation_percentage": citation_percentage,
             "partially_analyzed": partially_analyzed,
             "opinion_semantic": round(opinion_semantic, 2),

@@ -159,10 +159,6 @@ async def analyze_text(
     
     # 4. Save to database (Metadata persistent, sentences kept briefly)
     sentences = result.get("sentences", [])
-    ai_c = sum(1 for s in sentences if s.get("score", 0) > 75)
-    para_c = sum(1 for s in sentences if 50 < s.get("score", 0) <= 75)
-    mix_c = sum(1 for s in sentences if 25 < s.get("score", 0) <= 50)
-    human_c = sum(1 for s in sentences if s.get("score", 0) <= 25)
     
     # Calculate Fingerprint (SHA-256)
     text_hash = hashlib.sha256(request.text_content.encode()).hexdigest()
@@ -176,10 +172,11 @@ async def analyze_text(
         burstiness=result["burstiness"],
         status=result["status"],
         sentences=sentences, # Kept briefly for report download
-        ai_count=ai_c,
-        para_count=para_c,
-        mix_count=mix_c,
-        human_count=human_c,
+        ai_count=result.get("ai_count", 0),
+        para_count=result.get("para_count", 0),
+        mix_count=result.get("mix_count", 0),
+        human_count=result.get("human_count", 0),
+        citation_count=result.get("citation_count", 0),
         opinion_semantic=result.get("opinion_semantic"),
         opinion_perplexity=result.get("opinion_perplexity"),
         opinion_burstiness=result.get("opinion_burstiness"),
@@ -281,10 +278,6 @@ async def analyze_file(
     
     # 5. Save to DB (Metadata persistent, sentences kept briefly)
     sentences = result.get("sentences", [])
-    ai_c = sum(1 for s in sentences if s.get("score", 0) > 75)
-    para_c = sum(1 for s in sentences if 50 < s.get("score", 0) <= 75)
-    mix_c = sum(1 for s in sentences if 25 < s.get("score", 0) <= 50)
-    human_c = sum(1 for s in sentences if s.get("score", 0) <= 25)
     
     # Calculate Fingerprint
     text_hash = hashlib.sha256(text.encode()).hexdigest()
@@ -298,10 +291,11 @@ async def analyze_file(
         burstiness=result["burstiness"],
         status=result["status"],
         sentences=sentences, # Kept briefly for report download
-        ai_count=ai_c,
-        para_count=para_c,
-        mix_count=mix_c,
-        human_count=human_c,
+        ai_count=result.get("ai_count", 0),
+        para_count=result.get("para_count", 0),
+        mix_count=result.get("mix_count", 0),
+        human_count=result.get("human_count", 0),
+        citation_count=result.get("citation_count", 0),
         opinion_semantic=result.get("opinion_semantic"),
         opinion_perplexity=result.get("opinion_perplexity"),
         opinion_burstiness=result.get("opinion_burstiness"),

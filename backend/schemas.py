@@ -56,10 +56,11 @@ class ScanResponse(ScanBase):
     burstiness: float
     status: str
     sentences: list[dict] | None = None
-    ai_count: int = 0
-    para_count: int = 0
-    mix_count: int = 0
-    human_count: int = 0
+    ai_count: int | None = 0
+    para_count: int | None = 0
+    mix_count: int | None = 0
+    human_count: int | None = 0
+    citation_count: int | None = 0
     partially_analyzed: bool = False
     opinion_semantic: Optional[float] = None
     opinion_perplexity: Optional[float] = None
