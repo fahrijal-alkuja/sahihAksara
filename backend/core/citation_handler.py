@@ -7,12 +7,13 @@ class CitationHandler:
             # Direct quotes with double quotes "..." or “...”
             "direct_quote": re.compile(r'["“][^"”]{30,}["”]', re.IGNORECASE),
             
-            # APA/MLA style like (Author, 2023) or [1, 2]
-            # Now expanded to support (Name & Other, Year) or (Name, Name, & Name, Year)
-            "body_note": re.compile(r'\([\w\s\.,&]+,?\s\d{4}([:\s,]+(hal\.|p\.)?\s?\d+[-–]?\d*)?\)', re.UNICODE),
+            # Comprehensive Body Note (APA, MLA, Chicago)
+            # Patterns: (Author, Year), (Author Year), (Author Page), (Author, Year: Page)
+            "body_note": re.compile(r'\([\w\s\.,&]+(,? \d{4})?([:\s,]+(hal\.|p\.|hlm\.)?\s?\d+[-–]?\d*)?\)', re.UNICODE),
             
-            # Narrative Citation like "Nama et al. (2021)" or "Aji & Mala (2024)"
-            "narrative_citation": re.compile(r'\b[\w\s\.,&]+(\set\sal\.)?,?\s\(\d{4}\)', re.UNICODE),
+            # Comprehensive Narrative Citation
+            # Patterns: Author (Year), Author (Year, p. Page), Author (Page)
+            "narrative_citation": re.compile(r'\b[\w\s\.,&]+(\set\sal\.)?,?\s\((?:\d{4}|\d+)(?:[,\s:]+(?:hal\.|p\.|hlm\.)?\s?\d+)?\)', re.UNICODE),
             
             "bracketed": re.compile(r'\[\d{1,3}(,\s?\d{1,3})*\]'),
             
@@ -40,8 +41,8 @@ class CitationHandler:
             # URLs and DOIs
             "url": re.compile(r'https?://[^\s<>"]+|www\.[^\s<>"]+|doi\.org/[^\s<>"]+', re.IGNORECASE),
 
-            # Citation/Bibliography Headers
-            "headers": re.compile(r'\b(DAFTAR PUSTAKA|REFERENCES|BIBLIOGRAPHY|DAFTAR RUJUKAN|CATATAN KAKI|FOOTNOTES|ABSTRACT|INTISARI|SARI|PENDAHULUAN|METODOLOGI|HASIL DAN PEMBAHASAN|KESIMPULAN)\b', re.IGNORECASE),
+            # Citation/Bibliography Headers (APA, MLA, Chicago, etc.)
+            "headers": re.compile(r'\b(DAFTAR PUSTAKA|REFERENCES|BIBLIOGRAPHY|DAFTAR RUJUKAN|CATATAN KAKI|FOOTNOTES|WORKS CITED|ABSTRACT|INTISARI|SARI|PENDAHULUAN|METODOLOGI|HASIL DAN PEMBAHASAN|KESIMPULAN|SUMMARY)\b', re.IGNORECASE),
 
             # Introductory phrases common in academic citations in Indonesian
             "intro_indonesian": re.compile(
