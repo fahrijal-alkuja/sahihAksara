@@ -195,13 +195,17 @@ class ReportGenerator:
         pdf.cell(0, 10, "Komposisi Teks (Text Composition)", ln=True)
         
         # Bar chart logic (re-used and polished)
-        sentences = scan_data.get("sentences") or []
         ai_c = scan_data.get("ai_count", 0)
         para_c = scan_data.get("para_count", 0)
         mix_c = scan_data.get("mix_count", 0)
         human_c = scan_data.get("human_count", 0)
-        total_s = max(1, ai_c + para_c + mix_c + human_c)
+        cit_c = scan_data.get("citation_count", 0)
+        skip_c = scan_data.get("skipped_count", 0)
         
+        total_s = max(1, ai_c + para_c + mix_c + human_c + cit_c + skip_c)
+        
+        p_cit = (cit_c / total_s) * 100
+        p_skip = (skip_c / total_s) * 100
         p_ai = (ai_c / total_s) * 100
         p_para = (para_c / total_s) * 100
         p_mix = (mix_c / total_s) * 100
@@ -212,23 +216,35 @@ class ReportGenerator:
         pdf.rect(10, 187, 190, 8, 'F')
         
         cur_x = 10
-        colors = [(239, 68, 68), (249, 115, 22), (245, 158, 11), (16, 185, 129)]
-        percents = [p_ai, p_para, p_mix, p_human]
+        colors = [
+            (59, 130, 246), # Blue-500 (Kutipan)
+            (100, 116, 139), # Slate-500 (Lainnya)
+            (239, 68, 68),  # Red-500 (AI)
+            (249, 115, 22),  # Orange-500 (Parafrasa)
+            (245, 158, 11),  # Amber-500 (Campuran)
+            (16, 185, 129)   # Emerald-500 (Manusia)
+        ]
+        percents = [p_cit, p_skip, p_ai, p_para, p_mix, p_human]
         for color, p in zip(colors, percents):
             if p > 0:
                 pdf.set_fill_color(*color)
                 pdf.rect(cur_x, 187, (p/100)*190, 8, 'F')
                 cur_x += (p/100)*190
         
-        # Legend
+        # Legend (2 columns)
         pdf.set_xy(10, 198)
-        legend_labels = ["AI Identik", "Parafrasa", "Campuran", "Manusia"]
-        for color, lab, p in zip(colors, legend_labels, percents):
+        legend_labels = ["Kutipan", "Lainnya", "AI Identik", "Parafrasa", "Campuran", "Manusia"]
+        
+        col_width = 63
+        for i, (color, lab, p) in enumerate(zip(colors, legend_labels, percents)):
+            if i > 0 and i % 3 == 0:
+                pdf.set_xy(10, pdf.get_y() + 6)
+            
             pdf.set_fill_color(*color)
             pdf.rect(pdf.get_x(), pdf.get_y()+1, 3, 3, 'F')
             pdf.set_x(pdf.get_x()+4)
             pdf.set_font("Arial", '', 9)
-            pdf.cell(44, 5, f"{p:.0f}% {lab}")
+            pdf.cell(col_width - 4, 5, f"{p:.0f}% {lab}")
             
         # --- SARAN PERBAIKAN (ACTIONABLE) ---
         pdf.ln(15)
@@ -262,11 +278,19 @@ class ReportGenerator:
             pdf.multi_cell(0, 10, "[Detail kalimat telah dihapus atas alasan privasi digital. Gunakan aplikasi SahihAksara untuk melihat analisis real-time.]", border=1, align='C')
         else:
             for s in sentences:
+                is_cite = s.get("is_citation", False)
                 score = s.get("score", 0)
-                if score > 75: pdf.set_fill_color(254, 226, 226) # Red-100
-                elif score > 50: pdf.set_fill_color(255, 247, 237) # Orange-50
-                elif score > 25: pdf.set_fill_color(255, 251, 235) # Amber-50
-                else: pdf.set_fill_color(255, 255, 255)
+                
+                if is_cite:
+                    pdf.set_fill_color(219, 234, 254) # Blue-100 (Kutipan)
+                elif score > 75: 
+                    pdf.set_fill_color(254, 226, 226) # Red-100
+                elif score > 50: 
+                    pdf.set_fill_color(255, 247, 237) # Orange-50
+                elif score > 25: 
+                    pdf.set_fill_color(255, 251, 235) # Amber-50
+                else: 
+                    pdf.set_fill_color(255, 255, 255)
                 
                 sanitized_text = self._sanitize_text(s.get("text", ""))
                 pdf.multi_cell(0, 8, sanitized_text, border=0, fill=True)

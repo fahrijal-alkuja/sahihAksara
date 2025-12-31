@@ -177,6 +177,7 @@ async def analyze_text(
         mix_count=result.get("mix_count", 0),
         human_count=result.get("human_count", 0),
         citation_count=result.get("citation_count", 0),
+        skipped_count=result.get("skipped_count", 0),
         opinion_semantic=result.get("opinion_semantic"),
         opinion_perplexity=result.get("opinion_perplexity"),
         opinion_burstiness=result.get("opinion_burstiness"),
@@ -296,6 +297,7 @@ async def analyze_file(
         mix_count=result.get("mix_count", 0),
         human_count=result.get("human_count", 0),
         citation_count=result.get("citation_count", 0),
+        skipped_count=result.get("skipped_count", 0),
         opinion_semantic=result.get("opinion_semantic"),
         opinion_perplexity=result.get("opinion_perplexity"),
         opinion_burstiness=result.get("opinion_burstiness"),
@@ -344,9 +346,12 @@ async def generate_report(
         "para_count": scan.para_count,
         "mix_count": scan.mix_count,
         "human_count": scan.human_count,
+        "citation_count": scan.citation_count,
+        "skipped_count": scan.skipped_count,
         "opinion_semantic": scan.opinion_semantic,
         "opinion_perplexity": scan.opinion_perplexity,
-        "opinion_burstiness": scan.opinion_burstiness
+        "opinion_burstiness": scan.opinion_burstiness,
+        "citation_percentage": scan.citation_percentage
     }
     
     # Generate PDF

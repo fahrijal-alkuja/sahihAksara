@@ -17,6 +17,7 @@ def migrate():
         ("citation_percentage", "FLOAT"),
         ("ai_source", "VARCHAR"),
         ("citation_count", "INTEGER"),
+        ("skipped_count", "INTEGER"),
     ]
     
     with engine.connect() as conn:

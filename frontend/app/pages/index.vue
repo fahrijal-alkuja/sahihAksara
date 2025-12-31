@@ -38,6 +38,12 @@ const downloadReport = () => {
 
 
 
+const downloadCertificate = () => {
+  if (!scanResult.value?.id) return
+  window.open(`http://localhost:8000/download-certificate/${scanResult.value.id}?token=${token.value}`, '_blank')
+}
+
+
 const loadScanHistory = (item) => {
   scanResult.value = item
   textInput.value = item.text_content
@@ -61,8 +67,9 @@ const getStrokeColor = (score) => {
   return 'stroke-emerald-500'
 }
 
-const getHighlightColor = (score) => {
-  if (score === -1) return 'bg-blue-500/20 text-blue-400 border border-blue-500/30' // Non-ID marker
+const getHighlightColor = (score, isCitation = false) => {
+  if (isCitation) return 'bg-blue-500/20 text-blue-400 border border-blue-500/30' // Citation marker
+  if (score === -1) return 'bg-slate-500/20 text-slate-400 border border-slate-500/30' // Non-ID marker/English
   if (score > 80) return 'bg-red-500/20 text-red-500'
   if (score > 60) return 'bg-amber-500/20 text-amber-500'
   if (score > 40) return 'bg-orange-500/20 text-orange-500'
@@ -79,11 +86,15 @@ const analysisSummary = computed(() => {
     identical: 0,
     paraphrased: 0,
     mixed: 0,
-    human: 0
+    human: 0,
+    citation: 0,
+    skipped: 0
   }
 
   scanResult.value.sentences.forEach(s => {
-    if (s.score > 75) counts.identical++
+    if (s.is_citation) counts.citation++
+    else if (s.language === 'en' || s.skipped) counts.skipped++
+    else if (s.score > 75) counts.identical++
     else if (s.score > 50) counts.paraphrased++
     else if (s.score > 25) counts.mixed++
     else counts.human++
@@ -95,7 +106,9 @@ const analysisSummary = computed(() => {
     identical: getPercent(counts.identical),
     paraphrased: getPercent(counts.paraphrased),
     mixed: getPercent(counts.mixed),
-    human: getPercent(counts.human)
+    human: getPercent(counts.human),
+    citation: getPercent(counts.citation),
+    skipped: getPercent(counts.skipped)
   }
 })
 
@@ -267,20 +280,23 @@ onMounted(async () => {
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]"></span>
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Non-ID</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kutipan / Data</span>
                   </div>
                 </div>
               </div>
               
-              <div class="p-10 bg-[var(--panel-bg)] rounded-[2.5rem] border border-theme leading-[1.8] text-xl font-light text-theme-main shadow-inner max-h-[500px] overflow-y-auto custom-scrollbar">
-                <span 
-                  v-for="(sent, idx) in scanResult.sentences" 
-                  :key="idx"
-                  :class="getHighlightColor(sent.score)"
-                  class="inline-block px-1.5 rounded-lg transition-all duration-300 cursor-default"
-                >
-                  {{ sent.text }}&nbsp;
-                </span>
+              <div class="p-10 bg-[var(--panel-bg)] rounded-[2.5rem] border border-theme text-theme-main shadow-inner">
+                <div class="space-y-4 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar leading-relaxed">
+                  <span 
+                    v-for="(s, i) in scanResult.sentences" 
+                    :key="i"
+                    :class="getHighlightColor(s.score, s.is_citation)"
+                    class="inline px-1 py-0.5 rounded cursor-help transition-colors mr-1"
+                    :title="s.is_citation ? 'Kutipan Terdeteksi (Dikecualikan)' : `Skor AI: ${s.score}%`"
+                  >
+                    {{ s.text }}
+                  </span>
+                </div>
               </div>
             </div>
           </Transition>
@@ -327,14 +343,24 @@ onMounted(async () => {
                   </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 relative z-10">
-                  <div class="bg-[var(--text-main)]/5 p-4 rounded-3xl border border-theme text-center group/metric hover:border-purple-500/20 transition-all">
-                    <div class="text-[8px] text-theme-dim font-bold uppercase tracking-widest mb-1.5">Word Density</div>
-                    <div class="text-lg font-mono font-bold text-theme-main">{{ scanResult.perplexity?.toFixed(3) }}</div>
+                <div class="space-y-4 relative z-10">
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-[var(--text-main)]/5 p-4 rounded-3xl border border-theme text-center group/metric hover:border-purple-500/20 transition-all">
+                      <div class="text-[8px] text-theme-dim font-bold uppercase tracking-widest mb-1">Word Density</div>
+                      <div class="text-[7px] text-slate-500 uppercase tracking-widest mb-1.5 font-bold">Kepastian Pola (Rendah = AI)</div>
+                      <div class="text-lg font-mono font-bold text-theme-main">{{ scanResult.perplexity?.toFixed(3) }}</div>
+                    </div>
+                    <div class="bg-[var(--text-main)]/5 p-4 rounded-3xl border border-theme text-center group/metric hover:border-blue-500/20 transition-all">
+                      <div class="text-[8px] text-theme-dim font-bold uppercase tracking-widest mb-1">Structural Flex</div>
+                      <div class="text-[7px] text-slate-500 uppercase tracking-widest mb-1.5 font-bold">Variasi Ritme (Rendah = AI)</div>
+                      <div class="text-lg font-mono font-bold text-theme-main">{{ scanResult.burstiness?.toFixed(3) }}</div>
+                    </div>
                   </div>
-                  <div class="bg-[var(--text-main)]/5 p-4 rounded-3xl border border-theme text-center group/metric hover:border-blue-500/20 transition-all">
-                    <div class="text-[8px] text-theme-dim font-bold uppercase tracking-widest mb-1.5">Structural Flex</div>
-                    <div class="text-lg font-mono font-bold text-theme-main">{{ scanResult.burstiness?.toFixed(3) }}</div>
+
+                  <!-- Repositioned Intelligence Badge -->
+                  <div v-if="scanResult.ai_source" class="w-full py-3 bg-purple-500/5 rounded-2xl border border-purple-500/20 flex items-center justify-center gap-2 group/badge hover:bg-purple-500/10 transition-all shadow-inner">
+                    <svg class="w-3 h-3 text-purple-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="text-[9px] font-black text-purple-400 uppercase tracking-[0.2em]">Source Probability: {{ scanResult.ai_source.toUpperCase() }}</span>
                   </div>
                 </div>
               </div>
@@ -411,6 +437,8 @@ onMounted(async () => {
                 </div>
 
                 <div class="h-1.5 w-full bg-slate-900 rounded-full flex overflow-hidden p-[1px]">
+                  <div v-if="analysisSummary.citation" :style="{ width: analysisSummary.citation + '%' }" class="h-full bg-blue-500 rounded-full transition-all duration-[1500ms] shadow-[0_0_10px_rgba(59,130,246,0.3)]"></div>
+                  <div v-if="analysisSummary.skipped" :style="{ width: analysisSummary.skipped + '%' }" class="h-full bg-slate-500 rounded-full transition-all duration-[1500ms] shadow-[0_0_10px_rgba(100,116,139,0.3)]"></div>
                   <div :style="{ width: analysisSummary.identical + '%' }" class="h-full bg-red-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(239,68,68,0.3)]"></div>
                   <div :style="{ width: analysisSummary.paraphrased + '%' }" class="h-full bg-orange-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(249,115,22,0.3)]"></div>
                   <div :style="{ width: analysisSummary.mixed + '%' }" class="h-full bg-amber-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.3)]"></div>
@@ -419,24 +447,44 @@ onMounted(async () => {
 
                 <div class="grid grid-cols-2 gap-y-3 gap-x-4">
                   <div v-for="(val, label, idx) in { 
+                    'Kutipan': { val: analysisSummary.citation, color: 'bg-blue-500' },
+                    'Lainnya': { val: analysisSummary.skipped, color: 'bg-slate-500' },
                     'AI Identic': { val: analysisSummary.identical, color: 'bg-red-500' },
                     'Parafrasa': { val: analysisSummary.paraphrased, color: 'bg-orange-500' },
                     'Campuran': { val: analysisSummary.mixed, color: 'bg-amber-500' },
                     'Manusia': { val: analysisSummary.human, color: 'bg-emerald-500' }
                   }" :key="idx" class="flex items-center gap-2">
-                    <div :class="val.color" class="w-1.5 h-1.5 rounded-full"></div>
+                    <div :class="val.color" class="w-1.5 h-1.5 rounded-full shadow-[0_0_5px_rgba(255,255,255,0.1)]"></div>
                     <span class="text-[9px] font-bold text-theme-dim transition-colors"><span class="text-theme-main">{{ val.val }}%</span> {{ label }}</span>
                   </div>
                 </div>
 
-                <!-- Action Button -->
-                <div class="pt-4 mt-2">
+                <!-- Citation Impact (Character Based) -->
+                <div v-if="scanResult.citation_percentage > 0" class="px-5 py-3 bg-blue-500/5 border border-blue-500/20 rounded-2xl flex items-center justify-between group/cit-impact hover:bg-blue-500/10 transition-all">
+                   <div class="flex items-center gap-3">
+                      <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                      <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Citation Impact</span>
+                   </div>
+                   <span class="text-xs font-black text-theme-main">{{ scanResult.citation_percentage }}%</span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-4 mt-2 flex flex-col gap-4">
                   <button 
                     @click="downloadReport"
                     class="w-full h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all transform active:scale-95 flex items-center justify-center gap-3 shadow-lg hover:shadow-indigo-500/20"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     Unduh Laporan PDF
+                  </button>
+
+                  <button 
+                    v-if="scanResult.ai_probability <= 45"
+                    @click="downloadCertificate"
+                    class="w-full h-12 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all transform active:scale-95 flex items-center justify-center gap-3 shadow-lg hover:shadow-amber-500/20"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Unduh Sertifikat Keaslian
                   </button>
                 </div>
               </div>

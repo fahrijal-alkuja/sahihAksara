@@ -61,6 +61,7 @@ class ScanResponse(ScanBase):
     mix_count: int | None = 0
     human_count: int | None = 0
     citation_count: int | None = 0
+    skipped_count: int | None = 0
     partially_analyzed: bool = False
     opinion_semantic: Optional[float] = None
     opinion_perplexity: Optional[float] = None

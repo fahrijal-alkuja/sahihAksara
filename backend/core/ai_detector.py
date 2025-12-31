@@ -161,9 +161,6 @@ class AIDetector:
         tokens = self.tokenizer(clean_text, return_tensors="pt", add_special_tokens=False).to(self.device)
         input_ids = tokens["input_ids"][0]
         
-        cv = self.calculate_burstiness(clean_text)
-        human_bonus = self.calculate_naturalness(clean_text)
-        
         # --- PERFORMANCE OPTIMIZATION: Hybrid Sampling ---
         max_len = 512
         total_tokens = len(input_ids)
@@ -266,12 +263,22 @@ class AIDetector:
             else:
                 detailed.append({"text": s_text, "score": 0.0, "skipped": True, "is_citation": is_cite})
                 
-        citation_percentage = round((citation_count / len(processed_sentences)) * 100, 1) if processed_sentences else 0.0
+        citation_percentage = round((citation_count / len(detailed)) * 100, 1) if detailed else 0.0
 
         opinion_semantic = (ai_weights / total_weight) if total_weight > 0 else 0.0
 
+        # --- GLOBAL STATS REFINEMENT: INDONESIAN PROSE FOCUS ---
+        # We only use Indonesian sentences that are NOT citations for global stats
+        # This prevents English abstracts or long bibliographies from skewing Perplexity/Burstiness
+        prose_sentences = [s["text"] for s in detailed if not s.get("is_citation") and s.get("language") != "en" and not s.get("skipped")]
+        analysis_base_text = " ".join(prose_sentences)
+        
+        # Fallback if no prose remains (e.g. 100% citation)
+        if len(analysis_base_text.split()) < 5:
+            analysis_base_text = clean_text 
+
         # --- ENSEMBLE OPINION 2: STATISTICAL (Perplexity) ---
-        global_features = self.calculate_features(clean_text[:1500])
+        global_features = self.calculate_features(analysis_base_text[:1500])
         global_loss = global_features["loss"]
         # Convert Loss to 0-100 scale. Lower loss = Higher AI Probability.
         # Loss around 0.5 is very high AI, loss > 2.0 is likely human.
@@ -279,10 +286,14 @@ class AIDetector:
 
         # --- ENSEMBLE OPINION 3: STRUCTURAL (Burstiness) ---
         # CV < 0.2 (Flat/AI), CV > 0.8 (Very Bursty/Human)
+        cv = self.calculate_burstiness(analysis_base_text)
         opinion_burstiness = max(0, min(100, (0.75 - cv) * 110))
+        
+        # --- HUMAN NATURALNESS BONUS ---
+        human_bonus = self.calculate_naturalness(analysis_base_text)
 
-        # Weighted Musyawarah (Academic Precision): 55% Semantic, 35% Perplexity, 10% Burstiness
-        ensemble_score = (opinion_semantic * 0.55) + (opinion_perplexity * 0.35) + (opinion_burstiness * 0.10)
+        # Weighted Musyawarah (Academic Precision): 55% Semantic, 30% Perplexity, 15% Burstiness
+        ensemble_score = (opinion_semantic * 0.55) + (opinion_perplexity * 0.30) + (opinion_burstiness * 0.15)
         
         # Apply Humanity Bonuses (Reduces the final AI score)
         # Multiplier: 1.1 (Slightly lowered for stricter alignment)
@@ -311,12 +322,13 @@ class AIDetector:
         else: status = "AI Generated"
         
         # Calculate granular counts for the return dict
-        # We exclude citations from AI/Human category counts to avoid confusion
-        ai_count = sum(1 for s in detailed if not s.get("is_citation") and s.get("score", 0) > 75)
-        para_count = sum(1 for s in detailed if not s.get("is_citation") and 50 < s.get("score", 0) <= 75)
-        mix_count = sum(1 for s in detailed if not s.get("is_citation") and 25 < s.get("score", 0) <= 50)
-        human_count = sum(1 for s in detailed if not s.get("is_citation") and 0 <= s.get("score", 0) <= 25)
+        # We exclude citations and skipped English content from AI/Human category counts
+        ai_count = sum(1 for s in detailed if not s.get("is_citation") and s.get("language") != "en" and s.get("score", 0) > 75)
+        para_count = sum(1 for s in detailed if not s.get("is_citation") and s.get("language") != "en" and 50 < s.get("score", 0) <= 75)
+        mix_count = sum(1 for s in detailed if not s.get("is_citation") and s.get("language") != "en" and 25 < s.get("score", 0) <= 50)
+        human_count = sum(1 for s in detailed if not s.get("is_citation") and s.get("language") != "en" and 0 <= s.get("score", 0) <= 25)
         cit_count = sum(1 for s in detailed if s.get("is_citation"))
+        skipped_count = sum(1 for s in detailed if s.get("language") == "en" or s.get("skipped"))
 
         # Fingerprint AI Source Stylometry
         ai_source = FingerprintAnalyzer.identify_source(text, final_prob)
@@ -333,6 +345,7 @@ class AIDetector:
             "mix_count": mix_count,
             "human_count": human_count,
             "citation_count": cit_count,
+            "skipped_count": skipped_count,
             "citation_percentage": citation_percentage,
             "partially_analyzed": partially_analyzed,
             "opinion_semantic": round(opinion_semantic, 2),

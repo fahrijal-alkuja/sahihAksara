@@ -35,6 +35,7 @@ class ScanResult(Base):
     mix_count = Column(Integer, default=0)
     human_count = Column(Integer, default=0)
     citation_count = Column(Integer, default=0)
+    skipped_count = Column(Integer, default=0)
     opinion_semantic = Column(Float, nullable=True)
     opinion_perplexity = Column(Float, nullable=True)
     opinion_burstiness = Column(Float, nullable=True)
