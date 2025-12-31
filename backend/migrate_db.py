@@ -15,6 +15,7 @@ def migrate():
         ("opinion_burstiness", "FLOAT"),
         ("opinion_humanity", "FLOAT"),
         ("citation_percentage", "FLOAT"),
+        ("ai_source", "VARCHAR"),
     ]
     
     with engine.connect() as conn:

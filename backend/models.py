@@ -39,6 +39,7 @@ class ScanResult(Base):
     opinion_burstiness = Column(Float, nullable=True)
     opinion_humanity = Column(Float, nullable=True)
     citation_percentage = Column(Float, nullable=True)
+    ai_source = Column(String, nullable=True)
     sha256_hash = Column(String, nullable=True) # Digital Fingerprint for Certificate
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

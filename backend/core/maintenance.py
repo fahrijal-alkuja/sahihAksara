@@ -57,3 +57,27 @@ def delete_user_history(db: Session, user_id: int):
     except Exception as e:
         db.rollback()
         raise e
+
+def vacuum_database(db: Session):
+    """
+    Physically optimizes the database disk space.
+    VACUUM cannot be run inside a transaction block in PostgreSQL.
+    We use the raw connection to execute it.
+    """
+    try:
+        # Commit any pending transactions first
+        db.commit()
+        # Get raw connection
+        connection = db.bind.raw_connection()
+        connection.set_isolation_level(0) # AUTOCOMMIT
+        cursor = connection.cursor()
+        print("Starting physical database vacuum...")
+        cursor.execute("VACUUM ANALYZE scan_results;")
+        cursor.execute("REINDEX TABLE scan_results;")
+        cursor.close()
+        connection.close()
+        print("Database optimization complete.")
+        return True
+    except Exception as e:
+        print(f"Vacuum error: {e}")
+        return False

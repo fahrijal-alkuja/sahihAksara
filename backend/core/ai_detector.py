@@ -4,6 +4,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForMasked
 import numpy as np
 import re
 from .citation_handler import CitationHandler
+from .fingerprint_analyzer import FingerprintAnalyzer
 
 class AIDetector:
     def __init__(self, model_name="indolem/indobert-base-uncased"):
@@ -316,8 +317,12 @@ class AIDetector:
         mix_count = sum(1 for s in detailed if 25 < s.get("score", 0) <= 50)
         human_count = sum(1 for s in detailed if 0 <= s.get("score", 0) <= 25)
 
+        # Fingerprint AI Source Stylometry
+        ai_source = FingerprintAnalyzer.identify_source(text, final_prob)
+
         return {
             "ai_probability": round(final_prob, 2),
+            "ai_source": ai_source,
             "perplexity": round(float(global_loss), 4),
             "burstiness": round(float(cv), 4),
             "status": status,

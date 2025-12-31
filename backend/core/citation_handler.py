@@ -8,8 +8,9 @@ class CitationHandler:
             "direct_quote": re.compile(r'["“][^"”]{30,}["”]', re.IGNORECASE),
             
             # Comprehensive Body Note (APA, MLA, Chicago)
-            # Patterns: (Author, Year), (Author Year), (Author Page), (Author, Year: Page)
-            "body_note": re.compile(r'\([\w\s\.,&]+(,? \d{4})?([:\s,]+(hal\.|p\.|hlm\.)?\s?\d+[-–]?\d*)?\)', re.UNICODE),
+            # Now strictly requires academic markers like years, page numbers, ampersands, or MLA (Name Page)
+            # This prevents terms like (calistung) or (worldview) from being flagged.
+            "body_note": re.compile(r'\([\w\s\.,&]+(?:(?:\b\d{4}\b)|(?:\b(?:hal\.|hlm\.|p\.|pp\.)\s*\d+)|(?:\b(?:et\sal\.?|&|and)\b)|(?:\b[A-Z][a-z]+\s+\d+))\)', re.UNICODE),
             
             # Comprehensive Narrative Citation
             # Patterns: Author (Year), Author (Year, p. Page), Author (Page)

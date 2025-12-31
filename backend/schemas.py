@@ -66,6 +66,7 @@ class ScanResponse(ScanBase):
     opinion_burstiness: Optional[float] = None
     opinion_humanity: Optional[float] = None
     citation_percentage: Optional[float] = None
+    ai_source: Optional[str] = None
     sha256_hash: Optional[str] = None
     created_at: datetime
 

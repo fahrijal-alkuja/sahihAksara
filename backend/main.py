@@ -183,7 +183,9 @@ async def analyze_text(
         opinion_semantic=result.get("opinion_semantic"),
         opinion_perplexity=result.get("opinion_perplexity"),
         opinion_burstiness=result.get("opinion_burstiness"),
-        opinion_humanity=result.get("opinion_humanity")
+        opinion_humanity=result.get("opinion_humanity"),
+        citation_percentage=result.get("citation_percentage"),
+        ai_source=result.get("ai_source")
     )
     db.add(db_result)
     db.commit()
@@ -303,7 +305,9 @@ async def analyze_file(
         opinion_semantic=result.get("opinion_semantic"),
         opinion_perplexity=result.get("opinion_perplexity"),
         opinion_burstiness=result.get("opinion_burstiness"),
-        opinion_humanity=result.get("opinion_humanity")
+        opinion_humanity=result.get("opinion_humanity"),
+        citation_percentage=result.get("citation_percentage"),
+        ai_source=result.get("ai_source")
     )
     db.add(db_result)
     db.commit()
