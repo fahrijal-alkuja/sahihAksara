@@ -34,6 +34,10 @@ class ScanResult(Base):
     para_count = Column(Integer, default=0)
     mix_count = Column(Integer, default=0)
     human_count = Column(Integer, default=0)
+    opinion_semantic = Column(Float, nullable=True)
+    opinion_perplexity = Column(Float, nullable=True)
+    opinion_burstiness = Column(Float, nullable=True)
+    opinion_humanity = Column(Float, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     owner = relationship("User", back_populates="scans")

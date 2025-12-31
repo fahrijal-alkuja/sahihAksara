@@ -97,25 +97,45 @@ class AIDetector:
         dots = text.count('.')
         commas = text.count(',')
         
-        # 1. Run-on Sentence Detection (Strong Human Marker)
-        if len(words) > 15 and dots <= 1:
-            bonus += 35.0
+        # 1. Run-on Sentence Detection (Moderate Marker)
+        if len(words) > 20 and dots <= 1:
+            bonus += 15.0 # Reduced from 35.0
             
-        # 2. Lowercase Start or lack of capitalization
+        # 2. Lowercase Start (Minor Marker)
         if text and text[0].islower():
-            bonus += 15.0
+            bonus += 8.0 # Reduced from 15.0
             
-        # 3. Enhanced Informal Word Detection (Common Indonesian Slang/Particles)
-        # These are extremely rare in formal AI output
-        informal_markers = [
+        # 3. Human Markers (Slang & Non-Standard Consistency)
+        # These are rare in formal AI output
+        human_markers = [
             'yg', 'gw', 'lu', 'gak', 'udah', 'aja', 'nih', 'kalo', 'donk', 'banget',
             'sih', 'deh', 'kok', 'tuh', 'loh', 'masih', 'cuma', 'pas', 'lagi', 'tadi',
-            'kayak', 'nyadar', 'abis', 'siapa', 'kenapa', 'gini', 'gitu', 'mana'
+            'kayak', 'nyadar', 'abis', 'siapa', 'kenapa', 'gini', 'gitu', 'mana',
+            # Non-standard common typos (AI usually writes perfectly)
+            'analisa', 'praktek', 'risiko', 'obyek', 'subyek', 'efektifitas', 
+            'aktifitas', 'hirarki', 'kwalitas', 'prosentase', 'sekedar', 'merubah'
         ]
-        found_slang = sum(1 for m in informal_markers if re.search(r'\b' + m + r'\b', text.lower()))
-        bonus += (found_slang * 12.0) # Increased weight
+        
+        # 4. AI Hallmarks (Formal Transition words & Jargon)
+        # AI (GPT) LOVES these connectors. Presence should SUBTRACT from human bonus.
+        ai_hallmarks = [
+            'perlu digarisbawahi', 'oleh karena itu', 'namun demikian', 'kendati demikian',
+            'di sisi lain', 'dalam hal ini', 'sehubungan dengan', 'merujuk pada',
+            'selaras dengan', 'berkenaan dengan', 'lebih lanjut', 'tak kalah pentingnya',
+            'paradigma', 'diskursus', 'manifestasi', 'konstruksi', 'fundamen', 
+            'substansi', 'implementasi', 'signifikansi', 'komprehensif', 'empiris',
+            'teoretis', 'metodologis', 'interpretasi', 'perspektif'
+        ]
+        
+        found_human = sum(1 for m in human_markers if re.search(r'\b' + m + r'\b', text.lower()))
+        found_ai = sum(1 for m in ai_hallmarks if re.search(r'\b' + m + r'\b', text.lower()))
+        
+        bonus += (found_human * 6.0)
+        bonus -= (found_ai * 3.0) # AI connectors reduce the manual human bonus
             
-        return bonus
+        # 5. Length Normalization
+        length_factor = min(1.0, 250 / (len(words) + 1))
+        return max(0, bonus * length_factor)
 
     def normalize_text(self, text: str) -> str:
         """
@@ -143,15 +163,12 @@ class AIDetector:
         
         # --- PERFORMANCE OPTIMIZATION: Hybrid Sampling ---
         max_len = 512
-        stride = 256
         total_tokens = len(input_ids)
         
         is_hybrid = total_tokens > (max_len * 4) and not force_full_scan 
         partially_analyzed = False
         
-        # 1. Improved Sentence Analysis (V4.2 - Granular Language Guard)
-        # We split by sentence endings followed by a capital/quote, 
-        # AND we also isolate text within quotes as separate segments.
+        # 1. Improved Sentence Analysis
         parts = re.split(r'([.!?]\s+(?=[A-Z"“])|["“][^"”]*["”])', clean_text)
         raw_sentences = []
         for p in parts:
@@ -159,12 +176,10 @@ class AIDetector:
             if p.startswith(('"', '“')) and p.endswith(('"', '”')):
                 raw_sentences.append(p.strip())
             else:
-                # Further split non-quote parts by sentences
                 sub_parts = re.split(r'(?<=[.!?])\s+(?=[A-Z"“])', p)
                 raw_sentences.extend([s.strip() for s in sub_parts if s.strip()])
         
         processed_sentences = [s for s in raw_sentences if len(s) > 5]
-        
         if not processed_sentences: processed_sentences = [clean_text]
         
         # Determine which sentences to scan
@@ -181,89 +196,89 @@ class AIDetector:
         sent_results = self.calculate_features_batch(sentences_to_scan, batch_size=24)
         detailed = []
         
-        global_features = self.calculate_features(clean_text[:1500])
-        global_conf = global_features["confidence"]
-        global_loss = global_features["loss"]
-        
-        # Recalibrated Logic V3.6 (Maximum Precision)
-        # We use a broad baseline of 2.1 to capture almost all formal AI structures.
-        target_baseline = 2.1
-        
+        # --- ENSEMBLE OPINION 1: SEMANTIC (IndoBERT) ---
+        target_baseline = 1.94 # Target: High-Confidence Academic Detection
         ai_weights = 0
         total_weight = 0
         
-        from langdetect import detect
+        # Track word counts for length-weighted scoring
+        total_relevant_words = 0
+        weighted_s_score = 0
         
+        from langdetect import detect
         scanned_map = {s_text: res for s_text, res in zip(sentences_to_scan, sent_results)}
         
         for s_text in processed_sentences[:150]:
-            # Detect language per sentence
             is_english = False
             try:
-                # Only run detection if sentence has enough length for accuracy
                 if len(s_text.split()) > 3:
-                    if detect(s_text) == 'en':
-                        is_english = True
-            except:
-                pass
+                    if detect(s_text) == 'en': is_english = True
+            except: pass
 
             if is_english:
-                detailed.append({
-                    "text": s_text,
-                    "score": -1.0, # Special marker for Non-Indonesian
-                    "language": "en"
-                })
+                detailed.append({"text": s_text, "score": -1.0, "language": "en"})
                 continue
 
             if s_text in scanned_map:
                 f = scanned_map[s_text]
                 s_loss = f["loss"]
-                
-                # Formula with acceleration
+                # FILTERING: Ignore noise (headers/footers/citations/numerics)
+                # Skip sentences < 5 words or containing too many numbers/symbols
+                s_words = s_text.split()
+                if len(s_words) < 5 or (sum(c.isdigit() or not c.isalnum() for c in s_text) / (len(s_text) + 1)) > 0.4:
+                    continue
+
                 raw_diff = target_baseline - s_loss
-                if raw_diff > 0.6: # High suspicion
-                    s_score = float(max(0, min(100, raw_diff * 140)))
-                    weight = 1.3
-                elif raw_diff > 0.3: # Medium suspicion
-                    s_score = float(max(0, min(100, raw_diff * 110)))
-                    weight = 1.0
-                else: # Low suspicion
-                    s_score = float(max(0, min(100, raw_diff * 80)))
-                    weight = 0.2
-                    
-                ai_weights += (s_score * weight)
-                total_weight += weight 
                 
-                detailed.append({
-                    "text": s_text,
-                    "score": round(s_score, 2)
-                })
+                # Semantic Scoring Logic (Bullseye for Docs)
+                if raw_diff > 0.6: s_score, weight = float(max(0, min(100, raw_diff * 140))), 1.5
+                elif raw_diff > 0.3: s_score, weight = float(max(0, min(100, raw_diff * 105))), 1.2
+                else: s_score, weight = float(max(0, min(100, raw_diff * 72))), 0.4
+                    
+                # Length-Weighted Addition
+                # Longer paragraphs have more "semantic gravity"
+                l_weight = len(s_words) / 15.0 # Normalizing around 15 words
+                ai_weights += (s_score * weight * l_weight)
+                total_weight += (weight * l_weight)
+                detailed.append({"text": s_text, "score": round(s_score, 2)})
             else:
-                detailed.append({
-                    "text": s_text,
-                    "score": 0.0,
-                    "skipped": True
-                })
+                detailed.append({"text": s_text, "score": 0.0, "skipped": True})
 
-        # Calculate base probability
-        if total_weight > 0:
-            density_prob = ai_weights / total_weight
-        else:
-            density_prob = 0.0
+        opinion_semantic = (ai_weights / total_weight) if total_weight > 0 else 0.0
 
-        # Adjust for Overall Signal
-        signal_boost = 1.0
-        # AI text is very monotonous (CV < 0.2 is extreme AI signal)
-        if cv < 0.2: signal_boost += 0.3
-        elif cv < 0.4: signal_boost += 0.15
+        # --- ENSEMBLE OPINION 2: STATISTICAL (Perplexity) ---
+        global_features = self.calculate_features(clean_text[:1500])
+        global_loss = global_features["loss"]
+        # Convert Loss to 0-100 scale. Lower loss = Higher AI Probability.
+        # Loss around 0.5 is very high AI, loss > 2.0 is likely human.
+        opinion_perplexity = max(0, min(100, (1.94 - global_loss) * 75))
+
+        # --- ENSEMBLE OPINION 3: STRUCTURAL (Burstiness) ---
+        # CV < 0.2 (Flat/AI), CV > 0.8 (Very Bursty/Human)
+        opinion_burstiness = max(0, min(100, (0.75 - cv) * 110))
+
+        # Weighted Musyawarah (Academic Precision): 55% Semantic, 35% Perplexity, 10% Burstiness
+        ensemble_score = (opinion_semantic * 0.55) + (opinion_perplexity * 0.35) + (opinion_burstiness * 0.10)
         
-        # Machine Precision Signal
-        if global_loss < 0.5: signal_boost += 0.25
-        elif global_loss < 0.9: signal_boost += 0.1
+        # Apply Humanity Bonuses (Reduces the final AI score)
+        # Multiplier: 1.1 (Slightly lowered for stricter alignment)
+        calculated_bonus = human_bonus * 1.1
         
-        # Probabilitas Akhir dengan "Humanity Debt" Agresif
-        final_prob = (density_prob * signal_boost) - (human_bonus * 1.2)
+        # CAP: If AI signal is very high, 20% max bonus
+        if ensemble_score > 80:
+            calculated_bonus = min(calculated_bonus, 20.0)
+            
+        final_prob = ensemble_score - calculated_bonus
         final_prob = float(max(0, min(100, final_prob)))
+
+        # Console Debug for Admin to see the "Musyawarah"
+        print(f"--- ENSEMBLE DEBATE (FINAL ALIGNMENT) ---")
+        print(f"1. Semantic Opinion: {opinion_semantic:.2f}")
+        print(f"2. Perplexity Opinion: {opinion_perplexity:.2f}")
+        print(f"3. Burstiness Opinion: {opinion_burstiness:.2f}")
+        print(f"4. Humanity Bonus: -{calculated_bonus:.2f}")
+        print(f"=> FINAL ENSEMBLE SCORE: {final_prob:.2f}% AI Probability")
+        print(f"-----------------------")
 
         # Status Mapping
         if final_prob < 20: status = "Human Written"
@@ -277,5 +292,9 @@ class AIDetector:
             "burstiness": round(float(cv), 4),
             "status": status,
             "sentences": detailed,
-            "partially_analyzed": partially_analyzed
+            "partially_analyzed": partially_analyzed,
+            "opinion_semantic": round(opinion_semantic, 2),
+            "opinion_perplexity": round(opinion_perplexity, 2),
+            "opinion_burstiness": round(opinion_burstiness, 2),
+            "opinion_humanity": round(calculated_bonus, 2)
         }

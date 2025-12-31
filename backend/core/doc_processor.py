@@ -5,13 +5,20 @@ import io
 class DocumentProcessor:
     @staticmethod
     def extract_text_from_pdf(file_content: bytes) -> str:
-        """Extract text from PDF using PyMuPDF."""
+        """Extract text from PDF using PyMuPDF with smart cleanup."""
         text = ""
         try:
             doc = fitz.open(stream=file_content, filetype="pdf")
+            pages = []
             for page in doc:
-                text += page.get_text()
+                # 1. Extract raw text
+                raw = page.get_text()
+                # 2. Smart Cleanup: Replace single newlines with spaces (joining sentences)
+                # but keep double newlines (paragraph boundaries)
+                clean = raw.replace("\n\n", "[[PARA]]").replace("\n", " ").replace("[[PARA]]", "\n\n")
+                pages.append(clean)
             doc.close()
+            text = "\n\n".join(pages)
         except Exception as e:
             print(f"Error extracting PDF: {e}")
             return ""

@@ -37,6 +37,10 @@ try:
         ("para_count", "INTEGER DEFAULT 0"),
         ("mix_count", "INTEGER DEFAULT 0"),
         ("human_count", "INTEGER DEFAULT 0"),
+        ("opinion_semantic", "FLOAT"),
+        ("opinion_perplexity", "FLOAT"),
+        ("opinion_burstiness", "FLOAT"),
+        ("opinion_humanity", "FLOAT"),
     ]
     for col_name, col_type in scan_cols:
         try:

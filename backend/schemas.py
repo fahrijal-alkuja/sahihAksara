@@ -61,6 +61,10 @@ class ScanResponse(ScanBase):
     mix_count: int = 0
     human_count: int = 0
     partially_analyzed: bool = False
+    opinion_semantic: Optional[float] = None
+    opinion_perplexity: Optional[float] = None
+    opinion_burstiness: Optional[float] = None
+    opinion_humanity: Optional[float] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

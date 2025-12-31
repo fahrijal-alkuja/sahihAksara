@@ -174,7 +174,11 @@ async def analyze_text(
         ai_count=ai_c,
         para_count=para_c,
         mix_count=mix_c,
-        human_count=human_c
+        human_count=human_c,
+        opinion_semantic=result.get("opinion_semantic"),
+        opinion_perplexity=result.get("opinion_perplexity"),
+        opinion_burstiness=result.get("opinion_burstiness"),
+        opinion_humanity=result.get("opinion_humanity")
     )
     db.add(db_result)
     db.commit()
@@ -185,7 +189,10 @@ async def analyze_text(
     background_tasks.add_task(expire_old_history, db, 7) # Auto-expiry
     
     # Convert to schema and manually inject sentences for the initial view
+    # We explicitly return the full text here so the frontend can use it immediately (e.g. for Humanizer)
+    # Even though it's saved as 'PURGED' in the database for long-term privacy.
     response_data = schemas.ScanResponse.model_validate(db_result)
+    response_data.text_content = request.text_content 
     response_data.sentences = sentences
     return response_data
 
@@ -283,7 +290,11 @@ async def analyze_file(
         ai_count=ai_c,
         para_count=para_c,
         mix_count=mix_c,
-        human_count=human_c
+        human_count=human_c,
+        opinion_semantic=result.get("opinion_semantic"),
+        opinion_perplexity=result.get("opinion_perplexity"),
+        opinion_burstiness=result.get("opinion_burstiness"),
+        opinion_humanity=result.get("opinion_humanity")
     )
     db.add(db_result)
     db.commit()
@@ -295,6 +306,7 @@ async def analyze_file(
     
     # Convert to schema and inject sentences for initial view
     response_data = schemas.ScanResponse.model_validate(db_result)
+    response_data.text_content = text
     response_data.sentences = sentences
     return response_data
 
@@ -334,6 +346,7 @@ async def generate_report(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=SahihAksara_Report_{scan_id}.pdf"}
     )
+
 
 # --- PAYMENT ENDPOINTS (UNIKAPAY) ---
 
