@@ -14,6 +14,7 @@ def migrate():
         ("opinion_perplexity", "FLOAT"),
         ("opinion_burstiness", "FLOAT"),
         ("opinion_humanity", "FLOAT"),
+        ("citation_percentage", "FLOAT"),
     ]
     
     with engine.connect() as conn:

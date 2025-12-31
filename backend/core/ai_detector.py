@@ -3,6 +3,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForMaskedLM
 import numpy as np
 import re
+from .citation_handler import CitationHandler
 
 class AIDetector:
     def __init__(self, model_name="indolem/indobert-base-uncased"):
@@ -23,6 +24,7 @@ class AIDetector:
             self.model = base_model.to(self.device)
             
         self.model.eval()
+        self.citation_handler = CitationHandler()
 
     def calculate_features_batch(self, texts: list[str], batch_size: int = 8):
         """
@@ -196,6 +198,9 @@ class AIDetector:
         sent_results = self.calculate_features_batch(sentences_to_scan, batch_size=24)
         detailed = []
         
+        # --- CITATION FILTERING ---
+        citation_count = 0
+        
         # --- ENSEMBLE OPINION 1: SEMANTIC (IndoBERT) ---
         target_baseline = 1.94 # Target: High-Confidence Academic Detection
         ai_weights = 0
@@ -218,6 +223,11 @@ class AIDetector:
             if is_english:
                 detailed.append({"text": s_text, "score": -1.0, "language": "en"})
                 continue
+                
+            # Check for citation
+            is_cite = self.citation_handler.is_citation(s_text)
+            if is_cite:
+                citation_count += 1
 
             if s_text in scanned_map:
                 f = scanned_map[s_text]
@@ -236,13 +246,19 @@ class AIDetector:
                 else: s_score, weight = float(max(0, min(100, raw_diff * 72))), 0.4
                     
                 # Length-Weighted Addition
-                # Longer paragraphs have more "semantic gravity"
                 l_weight = len(s_words) / 15.0 # Normalizing around 15 words
-                ai_weights += (s_score * weight * l_weight)
-                total_weight += (weight * l_weight)
-                detailed.append({"text": s_text, "score": round(s_score, 2)})
+                
+                # --- CITATION LOGIC: Exclude from global weight if citation ---
+                if is_cite:
+                    detailed.append({"text": s_text, "score": round(s_score, 2), "is_citation": True})
+                else:
+                    ai_weights += (s_score * weight * l_weight)
+                    total_weight += (weight * l_weight)
+                    detailed.append({"text": s_text, "score": round(s_score, 2), "is_citation": False})
             else:
-                detailed.append({"text": s_text, "score": 0.0, "skipped": True})
+                detailed.append({"text": s_text, "score": 0.0, "skipped": True, "is_citation": is_cite})
+                
+        citation_percentage = round((citation_count / len(processed_sentences)) * 100, 1) if processed_sentences else 0.0
 
         opinion_semantic = (ai_weights / total_weight) if total_weight > 0 else 0.0
 
@@ -303,6 +319,7 @@ class AIDetector:
             "para_count": para_count,
             "mix_count": mix_count,
             "human_count": human_count,
+            "citation_percentage": citation_percentage,
             "partially_analyzed": partially_analyzed,
             "opinion_semantic": round(opinion_semantic, 2),
             "opinion_perplexity": round(opinion_perplexity, 2),
