@@ -77,8 +77,8 @@ definePageMeta({
   <div class="max-w-7xl mx-auto px-6 py-12 space-y-12 relative z-10">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
-        <h1 class="text-5xl font-black transition-colors tracking-tighter font-heading">Command Center</h1>
-        <p class="text-content-muted font-medium tracking-wide mt-2">Pusat kendali operasional dan manajemen forensik naskah SahihAksara.</p>
+        <h1 class="text-5xl font-black text-theme-main transition-colors tracking-tighter font-heading">Command Center</h1>
+        <p class="text-theme-dim font-medium tracking-wide mt-2">Pusat kendali operasional dan manajemen forensik naskah SahihAksara.</p>
       </div>
       <div class="flex items-center gap-4 bg-purple-600/10 border border-purple-500/20 px-6 py-3 rounded-2xl backdrop-blur-md">
         <div class="flex items-center gap-3">
@@ -95,10 +95,10 @@ definePageMeta({
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
       <div v-for="(val, label) in { 'Verified Nodes': stats.total_users, 'Daily Intensity': stats.scans_today, 'Elite Access': stats.pro_users, 'Total Analysis': stats.total_scans }" :key="label" 
            class="glass-card p-10 rounded-[2.5rem] relative overflow-hidden group/tile">
-        <div class="absolute -bottom-8 -right-8 w-24 h-24 bg-white/5 blur-3xl rounded-full group-hover:bg-purple-600/10 transition-all duration-700"></div>
-        <h3 class="text-content-muted text-[10px] font-black uppercase tracking-[0.3em] mb-4">{{ label }}</h3>
-        <p class="text-4xl font-black transition-colors font-heading tracking-tighter">{{ val || 0 }}</p>
-        <div class="w-full h-1 bg-white/5 rounded-full mt-6 overflow-hidden">
+        <div class="absolute -bottom-8 -right-8 w-24 h-24 bg-[var(--text-main)]/5 blur-3xl rounded-full group-hover:bg-purple-600/10 transition-all duration-700"></div>
+        <h3 class="text-theme-dim text-[10px] font-black uppercase tracking-[0.3em] mb-4">{{ label }}</h3>
+        <p class="text-4xl font-black text-theme-main transition-colors font-heading tracking-tighter">{{ val || 0 }}</p>
+        <div class="w-full h-1 bg-[var(--text-main)]/5 rounded-full mt-6 overflow-hidden">
            <div class="h-full bg-gradient-to-r from-purple-500 to-fuchsia-500 w-1/2 animate-pulse"></div>
         </div>
       </div>
@@ -126,16 +126,16 @@ definePageMeta({
         
         <div class="space-y-6">
           <div class="space-y-3">
-             <label class="text-[10px] font-black text-content-muted uppercase tracking-widest ml-1">Base Monthly Price (IDR)</label>
+             <label class="text-[10px] font-black text-theme-dim uppercase tracking-widest ml-1">Base Monthly Price (IDR)</label>
              <div class="relative">
                 <input 
                   type="number" 
                   :value="getSetting('pro_monthly_price')"
                   @blur="updateSetting('pro_monthly_price', ($event.target as HTMLInputElement).value)"
-                  class="w-full bg-slate-900 border border-theme rounded-2xl px-6 py-4 text-white font-black text-lg focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all placeholder-slate-700"
+                  class="w-full bg-[var(--bg-color)] border border-theme rounded-2xl px-6 py-4 text-theme-main font-black text-lg focus:ring-2 focus:ring-emerald-500/30 outline-none transition-all placeholder-theme-dim/40"
                   placeholder="100000"
                 />
-                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-content-muted uppercase">Per Node</span>
+                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-theme-dim uppercase">Per Node</span>
              </div>
           </div>
 
@@ -158,9 +158,9 @@ definePageMeta({
           <div class="p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex items-center justify-between">
              <div class="space-y-1">
                 <p class="text-xs font-bold text-emerald-400">Monthly Yield</p>
-                <p class="text-[10px] text-content-muted font-black uppercase tracking-widest">Calculated Net per Seat</p>
+                <p class="text-[10px] text-theme-dim font-black uppercase tracking-widest">Calculated Net per Seat</p>
              </div>
-             <p class="text-2xl font-black text-white font-heading">
+             <p class="text-2xl font-black text-theme-main font-heading">
                 Rp {{ (Number(getSetting('pro_monthly_price')) * (1 - (getSetting('is_discount_active') === 'true' ? Number(getSetting('pro_discount_percent')) : 0) / 100)).toLocaleString('id-ID') }}
              </p>
           </div>
@@ -208,9 +208,9 @@ definePageMeta({
            <div class="p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl flex items-center justify-between">
               <div class="space-y-1">
                  <p class="text-xs font-bold text-amber-400">Day Pass Yield</p>
-                 <p class="text-[10px] text-content-muted font-black uppercase tracking-widest">Net Revenue</p>
+                 <p class="text-[10px] text-theme-dim font-black uppercase tracking-widest">Net Revenue</p>
               </div>
-              <p class="text-2xl font-black text-white font-heading">
+              <p class="text-2xl font-black text-theme-main font-heading">
                  Rp {{ (Number(getSetting('pro_day_price')) * (1 - (getSetting('is_discount_active') === 'true' ? Number(getSetting('pro_day_discount_percent')) : 0) / 100)).toLocaleString('id-ID') }}
               </p>
            </div>
@@ -225,7 +225,7 @@ definePageMeta({
            <div class="p-3 bg-purple-600/20 rounded-2xl border border-purple-500/30">
               <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
            </div>
-           <h2 class="text-2xl font-black transition-colors font-heading tracking-tight">Node Management</h2>
+           <h2 class="text-2xl font-black text-theme-main transition-colors font-heading tracking-tight">Node Management</h2>
         </div>
         <button @click="fetchAdminData" class="btn-premium flex items-center gap-3 bg-white/5 border border-white/10 hover:border-purple-500/30 text-slate-300">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -235,7 +235,7 @@ definePageMeta({
 
       <div class="overflow-x-auto">
         <table class="w-full text-left">
-          <thead class="bg-white/5 text-content-muted text-[10px] font-black uppercase tracking-[0.3em]">
+          <thead class="bg-[var(--text-main)]/5 text-theme-dim text-[10px] font-black uppercase tracking-[0.3em]">
             <tr>
               <th class="px-10 py-6">Operator Identity</th>
               <th class="px-10 py-6">Access Tier</th>
@@ -245,15 +245,15 @@ definePageMeta({
             </tr>
           </thead>
           <tbody class="divide-y divide-white/5">
-            <tr v-for="u in users" :key="u.id" class="hover:bg-white/[0.02] transition-all group">
+            <tr v-for="u in users" :key="u.id" class="hover:bg-[var(--text-main)]/[0.02] transition-all group">
               <td class="px-10 py-8 align-middle">
                 <div class="flex items-center gap-5">
-                  <div class="w-12 h-12 rounded-[1.2rem] bg-slate-900 border border-white/10 flex items-center justify-center text-lg font-black text-content-muted group-hover:text-white group-hover:border-purple-500/30 transition-all font-heading shadow-lg">
+                  <div class="w-12 h-12 rounded-[1.2rem] bg-[var(--bg-color)] border border-theme flex items-center justify-center text-lg font-black text-theme-dim group-hover:text-theme-main group-hover:border-purple-500/30 transition-all font-heading shadow-lg">
                     {{ u.full_name?.charAt(0) }}
                   </div>
                   <div class="space-y-1">
-                    <div class="text-sm font-bold group-hover:text-purple-500 transition-colors">{{ u.full_name }}</div>
-                    <div class="text-[10px] text-content-muted font-mono tracking-tight">{{ u.email }}</div>
+                    <div class="text-sm font-bold text-theme-main group-hover:text-purple-500 transition-colors">{{ u.full_name }}</div>
+                    <div class="text-[10px] text-theme-dim font-mono tracking-tight">{{ u.email }}</div>
                   </div>
                 </div>
               </td>
@@ -261,13 +261,13 @@ definePageMeta({
                 <div class="relative inline-block w-full min-w-[140px]">
                   <select 
                     @change="updateUser(u.id, { role: ($event.target as HTMLSelectElement).value })"
-                    class="appearance-none w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all cursor-pointer hover:border-purple-500/30"
+                    class="appearance-none w-full bg-[var(--bg-color)] border border-theme rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-theme-main focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all cursor-pointer hover:border-purple-500/30"
                   >
-                    <option value="free" :selected="u.role === 'free'" class="bg-slate-900">Free Tier</option>
-                    <option value="pro" :selected="u.role === 'pro'" class="bg-slate-900 text-amber-400">Pro Tier</option>
-                    <option value="admin" :selected="u.role === 'admin'" class="bg-slate-900 text-purple-400">Admin</option>
+                    <option value="free" :selected="u.role === 'free'" class="bg-[var(--bg-color)]">Free Tier</option>
+                    <option value="pro" :selected="u.role === 'pro'" class="bg-[var(--bg-color)] text-amber-500">Pro Tier</option>
+                    <option value="admin" :selected="u.role === 'admin'" class="bg-[var(--bg-color)] text-purple-500">Admin</option>
                   </select>
-                  <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-content-muted">
+                  <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-theme-dim">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </div>
                 </div>
@@ -278,15 +278,15 @@ definePageMeta({
                     type="number"
                     :value="u.daily_quota"
                     @blur="updateUser(u.id, { daily_quota: parseInt(($event.target as HTMLInputElement).value) })"
-                    class="w-20 bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-center font-bold text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all hover:border-white/20"
+                    class="w-20 bg-[var(--bg-color)] border border-theme rounded-xl px-4 py-2.5 text-xs text-center font-bold text-theme-main focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all hover:border-theme/50"
                   />
                 </div>
               </td>
               <td class="px-10 py-8 align-middle text-center">
                 <div class="flex flex-col items-center gap-1.5">
-                   <span class="text-xs font-bold text-content-muted font-mono">{{ u.created_at?.split('T')[0] }}</span>
+                   <span class="text-xs font-bold text-theme-dim font-mono">{{ u.created_at?.split('T')[0] }}</span>
                    <div class="flex items-center gap-2">
-                     <span class="text-[8px] text-content-muted font-black uppercase tracking-widest leading-none">Registry Date</span>
+                     <span class="text-[8px] text-theme-dim font-black uppercase tracking-widest leading-none">Registry Date</span>
                      <div class="w-1 h-1 rounded-full bg-slate-700"></div>
                    </div>
                 </div>

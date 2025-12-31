@@ -63,14 +63,14 @@ definePageMeta({
       <div class="flex items-center gap-8 relative z-10">
         <div class="relative group/avatar">
           <div class="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-tr from-purple-600 to-fuchsia-600 opacity-20 group-hover/avatar:opacity-40 blur-lg transition-opacity duration-700"></div>
-          <div class="w-24 h-24 rounded-[2.2rem] bg-slate-900 border border-white/10 flex items-center justify-center text-4xl font-black text-white shadow-2xl relative z-10 font-heading">
+          <div class="w-24 h-24 rounded-[2.2rem] bg-[var(--bg-color)] border border-theme flex items-center justify-center text-4xl font-black text-theme-main shadow-2xl relative z-10 font-heading">
             {{ user?.full_name?.charAt(0) || 'U' }}
           </div>
         </div>
         
         <div class="space-y-2">
           <div class="flex items-center gap-3">
-             <h1 class="text-3xl font-black transition-colors font-heading tracking-tight mb-2">{{ user?.full_name || 'User SahihAksara' }}</h1>
+             <h1 class="text-3xl font-black text-theme-main transition-colors font-heading tracking-tight mb-2">{{ user?.full_name || 'User SahihAksara' }}</h1>
              <span v-if="user?.role === 'pro'" class="text-[10px] font-black text-amber-500 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 w-fit">
                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                👑 Premium
@@ -108,13 +108,13 @@ definePageMeta({
         >
           Upgrade ke Pro
         </button>
-        <NuxtLink v-if="user?.role === 'admin'" to="/admin/dashboard" class="flex items-center gap-3 px-8 py-4 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 shadow-lg shadow-purple-500/10">
+        <NuxtLink v-if="user?.role === 'admin'" to="/admin/dashboard" class="flex items-center gap-3 px-8 py-4 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/30 font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 shadow-lg shadow-purple-500/10">
           Admin Panel
         </NuxtLink>
-        <NuxtLink to="/history-pembayaran" class="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-content-muted hover:text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl border border-white/5 transition-all active:scale-95">
+        <NuxtLink to="/history-pembayaran" class="flex items-center gap-3 px-8 py-4 bg-[var(--text-main)]/5 hover:bg-purple-500/10 text-theme-dim hover:text-purple-500 font-black text-xs uppercase tracking-[0.2em] rounded-2xl border border-theme hover:border-purple-500/30 transition-all active:scale-95">
           History Pembayaran
         </NuxtLink>
-        <button @click="logout" class="px-8 py-4 bg-white/5 hover:bg-white/10 text-content-muted hover:text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl border border-white/5 transition-all active:scale-95">
+        <button @click="logout" class="px-8 py-4 bg-[var(--text-main)]/5 hover:bg-red-500/10 text-theme-dim hover:text-red-500 font-black text-xs uppercase tracking-[0.2em] rounded-2xl border border-theme hover:border-red-500/30 transition-all active:scale-95">
           Sign Out
         </button>
       </div>
@@ -126,9 +126,9 @@ definePageMeta({
         <div class="absolute top-0 right-0 p-6 opacity-5 group-hover/tile:opacity-10 transition-opacity">
            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>
         </div>
-        <h3 class="text-[10px] font-black text-content-muted uppercase tracking-[0.4em] mb-4">Total Analysis</h3>
-        <p class="text-5xl font-black transition-colors font-heading tracking-tighter">{{ scanHistory.length }}</p>
-        <p class="text-[9px] text-content-muted font-bold uppercase tracking-widest mt-4">Active Session Data</p>
+        <h3 class="text-[10px] font-black text-theme-dim uppercase tracking-[0.4em] mb-4">Total Analysis</h3>
+        <p class="text-5xl font-black text-theme-main transition-colors font-heading tracking-tighter">{{ scanHistory.length }}</p>
+        <p class="text-[9px] text-theme-dim font-bold uppercase tracking-widest mt-4">Active Session Data</p>
       </div>
       
       <div class="glass-card p-10 rounded-[2.5rem] relative overflow-hidden group/tile">
@@ -147,18 +147,18 @@ definePageMeta({
         <div class="absolute top-0 right-0 p-6 opacity-5 group-hover/tile:opacity-10 transition-opacity">
            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
         </div>
-        <h3 class="text-[10px] font-black text-content-muted uppercase tracking-[0.4em] mb-4">Security Protocol</h3>
-        <p class="text-5xl font-black transition-colors font-heading tracking-tighter uppercase shrink-0">L3</p>
-        <p class="text-[9px] text-content-muted font-bold uppercase tracking-widest mt-4">Verified Authentication</p>
+        <h3 class="text-[10px] font-black text-theme-dim uppercase tracking-[0.4em] mb-4">Security Protocol</h3>
+        <p class="text-5xl font-black text-theme-main transition-colors font-heading tracking-tighter uppercase shrink-0">L3</p>
+        <p class="text-[9px] text-theme-dim font-bold uppercase tracking-widest mt-4">Verified Authentication</p>
       </div>
     </div>
 
     <!-- Scan History (Forensic Table) -->
     <div class="glass-panel overflow-hidden border-purple-500/10 mb-20">
-      <div class="p-10 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
-        <h2 class="text-2xl font-black text-white font-heading tracking-tight flex items-center gap-4">
+      <div class="p-10 border-b border-white/10 flex items-center justify-between bg-[var(--text-main)]/[0.02]">
+        <h2 class="text-2xl font-black text-theme-main font-heading tracking-tight flex items-center gap-4">
            Analysis History
-           <span class="text-[10px] font-black text-content-muted px-3 py-1 bg-white/5 rounded-full border border-white/5 uppercase tracking-widest">{{ scanHistory.length }} Records</span>
+           <span class="text-[10px] font-black text-theme-dim px-3 py-1 bg-[var(--text-main)]/5 rounded-full border border-theme uppercase tracking-widest">{{ scanHistory.length }} Records</span>
         </h2>
         <button 
           v-if="scanHistory.length > 0"
@@ -171,44 +171,44 @@ definePageMeta({
       </div>
       
       <div v-if="scanHistory.length === 0" class="p-20 text-center space-y-4 flex flex-col items-center">
-        <div class="w-20 h-20 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-700 mb-4 blur-[0.5px]">
+        <div class="w-20 h-20 rounded-full bg-[var(--text-main)]/5 border border-theme flex items-center justify-center text-theme-dim mb-4 blur-[0.5px]">
           <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <h3 class="text-lg font-bold text-content-muted">No Records Found</h3>
-        <p class="text-sm text-content-muted max-w-xs font-medium">Your forensic analysis data will appear here once you begin scanning documents.</p>
+        <h3 class="text-lg font-bold text-theme-dim">No Records Found</h3>
+        <p class="text-sm text-theme-dim max-w-xs font-medium">Your forensic analysis data will appear here once you begin scanning documents.</p>
       </div>
 
       <div v-else class="overflow-x-auto">
         <table class="w-full text-left">
           <thead>
-            <tr class="bg-white/5 text-content-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-white/5">
+            <tr class="bg-[var(--text-main)]/5 text-theme-dim text-[10px] font-black uppercase tracking-[0.3em] border-b border-theme">
               <th class="px-10 py-6">Forensic Content Overlay</th>
               <th class="px-10 py-6 text-center">AI Intensity</th>
               <th class="px-10 py-6 text-center">Class</th>
               <th class="px-10 py-6 text-right">Timestamp</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-white/5">
+          <tbody class="divide-y border-theme">
             <tr v-for="scan in scanHistory" :key="scan.id" @click="scan.sentences ? downloadReport(scan) : null" 
                 :class="scan.sentences ? 'hover:bg-white/[0.03] cursor-pointer' : 'opacity-80 grayscale-[0.3] cursor-not-allowed'"
                 class="transition-all duration-300 group">
               <td class="px-10 py-8 align-middle">
                 <div class="flex flex-col gap-1.5">
-                  <span class="text-sm font-bold line-clamp-1 group-hover:text-purple-500 transition-colors">
+                  <span class="text-sm font-bold line-clamp-1 group-hover:text-purple-500 transition-colors text-theme-main">
                     {{ scan.text_content.includes('[PURGED') ? 'Content Purged for Privacy' : scan.text_content }}
                   </span>
-                  <span class="text-[9px] text-content-muted font-black uppercase tracking-widest flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 bg-slate-700 rounded-full border border-white/5"></span>
+                  <span class="text-[9px] text-theme-dim font-black uppercase tracking-widest flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-[var(--text-dim)]/20 rounded-full border border-theme"></span>
                     ID: {{ scan.id }}
                   </span>
                 </div>
               </td>
               <td class="px-10 py-8 align-middle">
                 <div class="flex flex-col items-center gap-2">
-                  <div class="w-32 bg-slate-900 h-2 rounded-full overflow-hidden border border-white/5 p-[1px] shadow-inner relative">
+                  <div class="w-32 bg-[var(--bg-color)] h-2 rounded-full overflow-hidden border border-theme p-[1px] shadow-inner relative">
                     <div class="h-full rounded-full transition-all duration-1000 shadow-lg" :style="{ width: scan.ai_probability + '%', backgroundColor: scan.ai_probability > 70 ? '#f87171' : scan.ai_probability > 40 ? '#fbbf24' : '#10b981', boxShadow: `0 0 10px ${scan.ai_probability > 70 ? 'rgba(248,113,113,0.3)' : scan.ai_probability > 40 ? 'rgba(251,191,36,0.2)' : 'rgba(16,185,129,0.2)'}` }"></div>
                   </div>
-                  <span class="text-xs font-black transition-colors font-mono tracking-tighter">{{ scan.ai_probability }}%</span>
+                  <span class="text-xs font-black transition-colors font-mono tracking-tighter text-theme-main">{{ scan.ai_probability }}%</span>
                 </div>
               </td>
               <td class="px-10 py-8 align-middle text-center">
@@ -220,10 +220,10 @@ definePageMeta({
               </td>
               <td class="px-10 py-8 align-middle text-right">
                 <div class="flex flex-col items-end gap-1.5">
-                   <span class="text-xs font-bold text-content-muted font-mono transition-colors">{{ formatDate(scan.created_at) }}</span>
+                   <span class="text-xs font-bold text-theme-dim font-mono transition-colors">{{ formatDate(scan.created_at) }}</span>
                    <div class="flex items-center gap-2">
-                    <span class="text-[9px] text-content-muted/80 font-black tracking-widest uppercase">{{ scan.sentences ? 'Verified Entry' : 'Zero-Retention Inactive' }}</span>
-                    <div :class="scan.sentences ? 'bg-emerald-500/30' : 'bg-slate-500/20'" class="w-1.5 h-1.5 rounded-full"></div>
+                    <span class="text-[9px] text-theme-dim/80 font-black tracking-widest uppercase">{{ scan.sentences ? 'Verified Entry' : 'Zero-Retention Inactive' }}</span>
+                    <div :class="scan.sentences ? 'bg-emerald-500/30' : 'bg-slate-500/20'" class="w-1.5 h-1.5 rounded-full transition-colors"></div>
                    </div>
                 </div>
               </td>

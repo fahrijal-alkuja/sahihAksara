@@ -1,5 +1,5 @@
 <script setup>
-const { isAuthenticated, user, logout, token } = useAuth()
+const { isAuthenticated, user, logout, token, fetchMe } = useAuth()
 const { notify, warning, error, showModal } = useNotify()
 const { scanResult, isScanning, scanHistory, scanText, uploadFile, fetchHistory } = useScanner()
 const textInput = ref('')
@@ -36,6 +36,17 @@ const downloadReport = () => {
   window.open(`http://localhost:8000/report/${scanResult.value.id}?token=${token.value}`, '_blank')
 }
 
+
+
+const loadScanHistory = (item) => {
+  scanResult.value = item
+  textInput.value = item.text_content
+  notify('Berhasil memuat data dari riwayat.', 'info')
+  // Scroll to top to see results
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+
 const getScoreColor = (score) => {
   if (score > 70) return 'text-red-500'
   if (score > 40) return 'text-orange-500'
@@ -52,8 +63,9 @@ const getStrokeColor = (score) => {
 
 const getHighlightColor = (score) => {
   if (score === -1) return 'bg-blue-500/20 text-blue-400 border border-blue-500/30' // Non-ID marker
-  if (score > 70) return 'bg-red-500/20 text-red-500'
-  if (score > 40) return 'bg-amber-500/20 text-amber-500'
+  if (score > 80) return 'bg-red-500/20 text-red-500'
+  if (score > 60) return 'bg-amber-500/20 text-amber-500'
+  if (score > 40) return 'bg-orange-500/20 text-orange-500'
   return 'bg-emerald-500/20 text-emerald-500'
 }
 
@@ -71,9 +83,9 @@ const analysisSummary = computed(() => {
   }
 
   scanResult.value.sentences.forEach(s => {
-    if (s.score > 70) counts.identical++
-    else if (s.score > 40) counts.paraphrased++
-    else if (s.score > 15) counts.mixed++
+    if (s.score > 75) counts.identical++
+    else if (s.score > 50) counts.paraphrased++
+    else if (s.score > 25) counts.mixed++
     else counts.human++
   })
 
@@ -123,58 +135,58 @@ const integrityVerdict = computed(() => {
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
+  if (token.value && !user.value) {
+    await fetchMe()
+  }
   fetchHistory()
 })
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-purple-500/30 overflow-x-hidden">
+  <div class="min-h-screen bg-[var(--bg-color)] text-[var(--text-main)] font-sans selection:bg-purple-500/30 overflow-x-hidden transition-colors duration-500">
     <!-- Decorative Background Elements -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      <div class="absolute -top-24 -left-24 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-glow"></div>
-      <div class="absolute top-1/2 -right-24 w-96 h-96 bg-blue-600/15 rounded-full blur-[120px] animate-glow" style="animation-delay: -4s"></div>
-      <div class="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-fuchsia-600/10 rounded-full blur-[150px] animate-glow" style="animation-delay: -2s"></div>
-      <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-transparent via-slate-950/50 to-slate-950 pointer-events-none"></div>
+      <div class="absolute -top-24 -left-24 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px] animate-glow"></div>
+      <div class="absolute top-1/2 -right-24 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] animate-glow" style="animation-delay: -4s"></div>
+      <div class="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-fuchsia-600/5 rounded-full blur-[150px] animate-glow" style="animation-delay: -2s"></div>
+      <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-transparent via-[var(--bg-color)] to-[var(--bg-color)] opacity-60 pointer-events-none"></div>
     </div>
 
     <!-- No more local navbar, handled globally -->
 
     <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
       <!-- Hero Section -->
-      <div class="text-center mb-20 space-y-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-        <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/50 border border-white/10 text-purple-400 text-[10px] font-black uppercase tracking-[0.3em] backdrop-blur-md shadow-xl">
+      <div class="text-center mb-24 space-y-10 animate-in fade-in slide-in-from-top-6 duration-1000">
+        <div class="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-purple-400 text-[10px] font-black uppercase tracking-[0.4em] backdrop-blur-2xl shadow-2xl hover:border-purple-500/30 transition-all cursor-default group">
           <span class="relative flex h-2.5 w-2.5">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500"></span>
           </span>
-          V3.0 Powered by IndoBERT
+          Intelligence V3.0 • Recalibrated
         </div>
-        <h1 class="text-5xl sm:text-7xl font-black transition-colors tracking-tighter leading-[0.9] font-heading drop-shadow-2xl">
-          Ulas Keaslian <br class="hidden sm:block" />
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-white to-blue-400">Karya Tulis Anda</span>
+        <h1 class="text-6xl sm:text-8xl font-black tracking-tighter leading-[0.85] font-heading drop-shadow-2xl">
+          Verifikasi <br class="hidden sm:block" />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-[var(--text-main)] to-purple-400">Kejujuran Karya</span>
         </h1>
-        <p class="text-lg text-slate-400 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
-          Satu-satunya detektor AI yang dirancang khusus untuk <span class="text-slate-100 font-medium border-b border-purple-500/50">Bahasa Indonesia</span>. Mendeteksi pola GPT, Gemini, dan model AI lainnya dengan akurasi kelas dunia.
+        <p class="text-xl text-theme-dim max-w-2xl mx-auto font-light leading-relaxed tracking-wide opacity-80 decoration-purple-500/30">
+          Standar emas deteksi AI untuk <span class="text-theme-main font-bold tracking-tight">Bahasa Indonesia</span>. Menggunakan algoritma <span class="text-indigo-400 font-black italic">Ensemble Deep-Learning</span> yang dioptimasi khusus untuk struktur linguistik nusantara.
         </p>
       </div>
 
-      <div class="grid lg:grid-cols-3 gap-12 items-start">
-        <!-- Input & Results Area -->
-        <div class="lg:col-span-2 space-y-12">
-          <div class="glass-card rounded-[3rem] p-2 bg-gradient-to-br from-white/10 via-white/5 to-transparent relative overflow-hidden group">
-            <!-- Decorative Inner Glow -->
-            <div class="absolute -top-24 -right-24 w-64 h-64 bg-purple-600/20 rounded-full blur-[80px] group-hover:bg-purple-600/30 transition-all duration-700"></div>
+      <div class="grid lg:grid-cols-3 gap-16 items-start">
+        <!-- Input Area -->
+        <div class="lg:col-span-2 space-y-16">
+          <div class="glass-card rounded-[3.5rem] p-3 bg-gradient-to-br from-white/10 via-white/5 to-transparent relative overflow-hidden group/input shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border-white/5">
+            <!-- Animated Background Glows -->
+            <div class="absolute -top-32 -right-32 w-80 h-80 bg-indigo-600/10 rounded-full blur-[100px] group-hover/input:bg-indigo-600/20 transition-all duration-1000"></div>
+            <div class="absolute -bottom-32 -left-32 w-80 h-80 bg-purple-600/10 rounded-full blur-[100px] group-hover/input:bg-purple-600/20 transition-all duration-1000"></div>
             
-            <div class="bg-slate-950/60 rounded-[2.8rem] p-10 backdrop-blur-3xl border border-white/5 relative z-10">
-              <div class="absolute top-0 right-0 p-8">
-                <div class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
-              </div>
-              
+            <div class="bg-[var(--panel-bg)] rounded-[3.2rem] p-12 backdrop-blur-3xl border border-white/5 relative z-10">
               <textarea
                 v-model="textInput"
-                class="w-full h-[450px] bg-transparent border-none focus:ring-0 text-xl resize-none placeholder:text-slate-500 leading-relaxed font-light transition-colors selection:bg-purple-500/40"
-                placeholder="Tempelkan naskah Anda di sini untuk memulai verifikasi keaslian..."
+                class="w-full h-[480px] bg-transparent border-none focus:ring-0 text-xl lg:text-2xl resize-none placeholder:text-theme-dim/40 text-theme-main leading-relaxed font-light transition-all selection:bg-indigo-500/30 custom-scrollbar pr-4 italic"
+                placeholder="Letakkan naskah akademis, artikel, atau esai Anda di sini..."
               ></textarea>
               
               <input 
@@ -185,39 +197,37 @@ onMounted(() => {
                 @change="handleFileUpload"
               />
               
-              <div class="flex flex-col sm:flex-row items-center justify-between mt-8 pt-8 border-t border-white/5 gap-6">
-                <div class="flex items-center gap-6">
-                  <div class="flex flex-col">
-                    <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Status Dokumen</span>
-                    <span class="text-xs text-slate-300 font-mono flex items-center gap-2">
-                       <span class="w-1 h-1 rounded-full bg-slate-500"></span>
-                       {{ textInput.length }} Karakter Terdeteksi
+              <div class="flex flex-col md:flex-row items-center justify-between mt-10 pt-10 border-t border-white/5 gap-8">
+                <div class="flex items-center gap-8">
+                  <div class="flex flex-col space-y-1">
+                    <span class="text-[9px] text-theme-dim font-black uppercase tracking-[0.3em]">Analysis Scope</span>
+                    <span class="text-sm text-theme-main font-mono font-medium flex items-center gap-2">
+                       <span :class="textInput.length >= 50 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-600'" class="w-1.5 h-1.5 rounded-full transition-colors"></span>
+                       {{ textInput.length.toLocaleString() }} <span class="text-[10px] text-theme-dim uppercase font-black">Characters</span>
                     </span>
                   </div>
-                  <div v-if="textInput.length > 0 && textInput.length < 50" class="px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                    <span class="text-[10px] text-amber-500 font-black uppercase tracking-widest animate-pulse">
-                      Min. 50 Karakter
-                    </span>
+                  <div v-if="textInput.length > 0 && textInput.length < 50" class="px-4 py-1.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                    <span class="text-[9px] text-amber-500 font-black uppercase tracking-widest animate-pulse">Min. 50 Karakter</span>
                   </div>
                 </div>
                 
-                <div class="flex items-stretch gap-4 w-full sm:w-auto">
+                <div class="group/actions flex items-center gap-5">
                   <button 
                     @click="triggerFileUpload"
-                    class="group/btn flex items-center justify-center gap-3 px-6 py-5 rounded-2xl bg-white/5 border border-white/5 hover:border-purple-500/30 transition-all active:scale-95 h-[64px] min-w-[200px]"
+                    class="h-16 w-16 flex items-center justify-center rounded-2xl bg-[var(--text-main)]/5 border border-theme hover:border-purple-500/30 hover:bg-purple-500/10 transition-all active:scale-90 group/upload"
+                    title="Upload File"
                   >
-                    <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover/btn:text-slate-200">UPLOAD DOC (.PDF / .DOCX)</span>
+                    <svg class="w-6 h-6 text-theme-dim group-hover/upload:text-purple-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
                   
                   <button
                     @click="handleScan"
                     :disabled="isScanning || textInput.length < 50"
-                    class="group relative flex-1 sm:flex-none px-12 py-5 bg-white text-slate-950 font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-[0_20px_40px_rgba(255,255,255,0.1)] transition-all hover:scale-105 hover:bg-slate-100 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-95 overflow-hidden h-[64px]"
+                    class="group relative h-16 px-14 bg-[var(--btn-main)] text-[var(--btn-main-text)] font-black uppercase tracking-[0.3em] text-[10px] rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-20 disabled:hover:scale-100 flex items-center gap-4 overflow-hidden border border-theme"
                   >
-                    <div v-if="isScanning" class="w-5 h-5 border-3 border-slate-900/30 border-t-slate-900 rounded-full animate-spin"></div>
-                    <span class="relative z-10">{{ isScanning ? 'Manganalisa...' : 'Verifikasi Teks' }}</span>
-                    <svg v-if="!isScanning" class="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <div v-if="isScanning" class="w-4 h-4 border-3 border-current/30 border-t-current rounded-full animate-spin"></div>
+                    <span>{{ isScanning ? 'Processing...' : 'Start Intelligence Scan' }}</span>
+                    <svg v-if="!isScanning" class="w-4 h-4 group-hover:translate-x-1.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
                 </div>
               </div>
@@ -262,7 +272,7 @@ onMounted(() => {
                 </div>
               </div>
               
-              <div class="p-10 bg-slate-950/40 rounded-[2.5rem] border border-white/5 leading-[1.8] text-xl font-light text-slate-300 shadow-inner max-h-[500px] overflow-y-auto custom-scrollbar">
+              <div class="p-10 bg-[var(--panel-bg)] rounded-[2.5rem] border border-theme leading-[1.8] text-xl font-light text-theme-main shadow-inner max-h-[500px] overflow-y-auto custom-scrollbar">
                 <span 
                   v-for="(sent, idx) in scanResult.sentences" 
                   :key="idx"
@@ -284,146 +294,150 @@ onMounted(() => {
               <SkeletonLoader />
             </div>
 
-            <div v-else-if="scanResult" key="result" class="glass-card rounded-[3rem] p-10 space-y-10 relative overflow-hidden group border-purple-500/20 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)]">
-              <div :class="getScoreColor(scanResult.ai_probability)" class="absolute -right-20 -top-20 w-40 h-40 opacity-20 blur-[80px] rounded-full animate-pulse"></div>
-              
-              <div class="flex items-center justify-between">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Detection Matrix</h3>
-                <div :class="getScoreColor(scanResult.ai_probability)" class="text-[10px] font-black px-4 py-1.5 bg-white/5 rounded-full border border-white/10 backdrop-blur-md shadow-xl flex items-center gap-2">
-                  <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
-                  {{ scanResult.status.toUpperCase() }}
-                </div>
-              </div>
-              
-              <div class="flex flex-col items-center py-6 relative">
-                <!-- Rotating Background Glow -->
-                <div class="absolute inset-0 bg-gradient-to-tr from-purple-600/10 via-blue-600/10 to-fuchsia-600/10 blur-[100px] animate-pulse"></div>
+            <div v-else-if="scanResult" key="result" class="space-y-6">
+              <!-- Score Ring & Matrix -->
+              <div class="glass-card rounded-[2.5rem] p-8 space-y-8 relative overflow-hidden group/main-score border-white/10 shadow-2xl">
+                <div :class="getScoreColor(scanResult.ai_probability)" class="absolute -right-20 -top-20 w-40 h-40 opacity-10 blur-[80px] rounded-full transition-all duration-1000"></div>
                 
-                <div class="relative w-64 h-64 flex items-center justify-center group-hover:scale-110 transition-transform duration-1000">
-                  <!-- Outer Ring Glow -->
-                  <div :class="getScoreColor(scanResult.ai_probability)" class="absolute inset-0 rounded-full blur-[40px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                  
-                  <div class="absolute inset-0 rounded-full border border-white/5 bg-slate-900/10 backdrop-blur-3xl shadow-[inset_0_0_60px_rgba(0,0,0,0.8)]"></div>
-                  <svg class="w-full h-full transform -rotate-90 relative z-10 filter drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-                    <circle cx="128" cy="128" r="110" fill="none" stroke="currentColor" stroke-width="14" class="text-slate-900/40" />
-                    <circle cx="128" cy="128" r="110" fill="none" stroke="currentColor" stroke-width="14" 
-                      :stroke-dasharray="691" 
-                      :stroke-dashoffset="691 - (691 * (scanResult.ai_probability) / 100)"
-                      :class="getStrokeColor(scanResult.ai_probability)"
-                      class="transition-all duration-[2500ms] cubic-bezier(0.4, 0, 0.2, 1)" 
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center z-20">
-                    <span class="text-7xl font-black transition-colors leading-none font-heading tracking-tighter drop-shadow-lg">{{ Math.round(scanResult.ai_probability) }}<span class="text-3xl text-slate-500">%</span></span>
-                    <span class="text-[10px] text-content-muted uppercase tracking-[0.4em] mt-6 font-black scale-110">AI Signature</span>
+                <div class="flex items-center justify-between relative z-10 transition-colors">
+                  <h3 class="text-[9px] font-black text-theme-dim uppercase tracking-[0.3em]">Detection Matrix</h3>
+                  <div :class="getScoreColor(scanResult.ai_probability)" class="text-[9px] font-black px-3 py-1 bg-[var(--text-main)]/5 rounded-full border border-theme flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+                    {{ scanResult.status.toUpperCase() }}
+                  </div>
+                </div>
+                
+                <div class="flex flex-col items-center py-2 relative">
+                  <div class="relative w-56 h-56 flex items-center justify-center group-hover/main-score:scale-105 transition-transform duration-700">
+                    <div :class="getScoreColor(scanResult.ai_probability)" class="absolute inset-0 rounded-full blur-[30px] opacity-10"></div>
+                    <svg class="w-full h-full transform -rotate-90 relative z-10">
+                      <circle cx="112" cy="112" r="95" fill="none" stroke="currentColor" stroke-width="10" class="text-slate-900/40" />
+                      <circle cx="112" cy="112" r="95" fill="none" stroke="currentColor" stroke-width="10" 
+                        :stroke-dasharray="597" 
+                        :stroke-dashoffset="597 - (597 * (scanResult.ai_probability) / 100)"
+                        :class="getStrokeColor(scanResult.ai_probability)"
+                        class="transition-all duration-[2000ms] ease-out" 
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center z-20">
+                      <span class="text-6xl font-black text-theme-main transition-colors leading-none tracking-tighter">{{ Math.round(scanResult.ai_probability) }}<span class="text-2xl text-theme-dim">%</span></span>
+                      <span class="text-[9px] text-theme-dim uppercase tracking-[0.3em] mt-4 font-black">AI Signature</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 relative z-10">
+                  <div class="bg-[var(--text-main)]/5 p-4 rounded-3xl border border-theme text-center group/metric hover:border-purple-500/20 transition-all">
+                    <div class="text-[8px] text-theme-dim font-bold uppercase tracking-widest mb-1.5">Word Density</div>
+                    <div class="text-lg font-mono font-bold text-theme-main">{{ scanResult.perplexity?.toFixed(3) }}</div>
+                  </div>
+                  <div class="bg-[var(--text-main)]/5 p-4 rounded-3xl border border-theme text-center group/metric hover:border-blue-500/20 transition-all">
+                    <div class="text-[8px] text-theme-dim font-bold uppercase tracking-widest mb-1.5">Structural Flex</div>
+                    <div class="text-lg font-mono font-bold text-theme-main">{{ scanResult.burstiness?.toFixed(3) }}</div>
                   </div>
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-5">
-                <div class="bg-slate-900/40 p-5 rounded-[2.2rem] border border-white/5 text-center shadow-lg group/metric hover:border-purple-500/20 transition-all hover:-translate-y-1 relative overflow-hidden">
-                  <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover/metric:opacity-100 transition-opacity"></div>
-                  <div class="text-[9px] text-content-muted font-black uppercase tracking-widest mb-2 relative z-10 transition-colors group-hover/metric:text-purple-400">Word Density</div>
-                  <div class="text-xl font-mono transition-colors font-bold tracking-tight relative z-10">{{ scanResult.perplexity?.toFixed(3) }}</div>
-                  <div class="text-[8px] text-slate-600 uppercase mt-1 relative z-10">Complexity</div>
+              <!-- Ensemble Debate -->
+              <div v-if="scanResult.opinion_semantic !== undefined" class="glass-card rounded-[2.5rem] p-8 space-y-6 relative overflow-hidden group/ensemble border-white/10">
+                <div class="flex items-center justify-between mb-2">
+                  <h4 class="text-[9px] font-black text-theme-dim uppercase tracking-[0.3em] flex items-center gap-2">
+                    <svg class="w-3 h-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Ensemble Debate
+                  </h4>
+                  <span class="text-[8px] font-black text-indigo-400/80 uppercase tracking-widest bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">Multi-Model</span>
                 </div>
-                <div class="bg-slate-900/40 p-5 rounded-[2.2rem] border border-white/5 text-center shadow-lg group/metric hover:border-blue-500/20 transition-all hover:-translate-y-1 relative overflow-hidden">
-                  <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover/metric:opacity-100 transition-opacity"></div>
-                  <div class="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2 relative z-10 transition-colors group-hover/metric:text-blue-400">Structural Flex</div>
-                  <div class="text-xl font-mono text-white font-bold tracking-tight relative z-10">{{ scanResult.burstiness?.toFixed(3) }}</div>
-                  <div class="text-[8px] text-slate-600 uppercase mt-1 relative z-10">Variability</div>
-                </div>
-              </div>
 
-              <div class="p-6 bg-slate-950/50 rounded-3xl border border-white/5 space-y-4">
-                <h4 class="text-xs font-bold text-slate-400 flex items-center gap-2 italic uppercase tracking-wider">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  Analisis Singkat
-                </h4>
-                <p class="text-xs text-slate-400 leading-relaxed">
-                  {{ scanResult.ai_probability > 70
-                    ? 'Teks memiliki pola linguistik yang sangat teratur dan dapat diprediksi, ciri khas dari model bahasa AI.' 
-                    : scanResult.ai_probability > 40 
-                    ? 'Terdapat indikasi struktural yang mirip dengan teks buatan AI, namun dengan beberapa variasi manusia.' 
-                    : 'Teks menunjukkan variasi struktur dan pola bahasa yang alami, khas dari tulisan tangan manusia.' 
-                  }}
+                <div class="space-y-4">
+                  <!-- Opinions with Thinner Bars -->
+                  <div v-for="(val, label, idx) in { 
+                    'Semantic Opinion': scanResult.opinion_semantic, 
+                    'Perplexity Opinion': scanResult.opinion_perplexity, 
+                    'Burstiness Opinion': scanResult.opinion_burstiness 
+                  }" :key="idx" class="space-y-1.5">
+                    <div class="flex justify-between text-[8px] font-bold uppercase tracking-wider text-theme-dim">
+                      <span>{{ idx + 1 }}. {{ label }}</span>
+                      <span class="text-theme-main">{{ val?.toFixed(1) }}%</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden p-[1px]">
+                      <div :style="{ width: val + '%' }" 
+                        :class="idx === 0 ? 'bg-blue-500' : idx === 1 ? 'bg-purple-500' : 'bg-orange-500'" 
+                        class="h-full transition-all duration-1000 shadow-[0_0_8px_rgba(255,255,255,0.1)]"></div>
+                    </div>
+                  </div>
+
+                  <!-- Humanity Bonus -->
+                  <div class="space-y-1.5 pt-2">
+                    <div class="flex justify-between text-[8px] font-bold uppercase tracking-wider text-emerald-500">
+                      <span>4. Humanity Bonus</span>
+                      <span class="text-emerald-400">-{{ scanResult.opinion_humanity?.toFixed(1) }}%</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden p-[1px]">
+                      <div :style="{ width: Math.min(100, (scanResult.opinion_humanity || 0) * 1) + '%' }" 
+                        class="h-full bg-emerald-500 transition-all duration-1000"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <p class="text-[8px] text-theme-dim leading-relaxed font-medium mt-2 italic decoration-slate-500/20">
+                  *Skor akhir dihitung berdasarkan bobot musyawarah: 55% Semantic, 30% Perplexity, 15% Burstiness, dikurangi Bonus.
                 </p>
               </div>
 
-              <!-- Integrity Verdict (Unified with PDF) -->
-              <div v-if="integrityVerdict" :class="[integrityVerdict.bg, integrityVerdict.border]" class="p-6 rounded-3xl border space-y-3 relative overflow-hidden group/verdict">
+              <!-- Integrity Verdict (Unified) -->
+              <div v-if="integrityVerdict" :class="[integrityVerdict.bg, integrityVerdict.border]" class="p-6 rounded-[2rem] border relative overflow-hidden group/verdict shadow-lg transition-all hover:shadow-xl">
                 <div class="absolute top-0 right-0 p-4 opacity-10 group-hover/verdict:scale-110 transition-transform">
                    <svg class="w-12 h-12" :class="integrityVerdict.color" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path :d="integrityVerdict.icon" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                    </svg>
                 </div>
-                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70" :class="integrityVerdict.color">
-                  Asesmen Integritas
-                </h4>
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-black tracking-tight" :class="integrityVerdict.color">{{ integrityVerdict.status }}</span>
+                <div class="relative z-10 space-y-3">
+                  <h4 class="text-[9px] font-black uppercase tracking-[0.2em] opacity-80" :class="integrityVerdict.color">Asesmen Integritas</h4>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-black tracking-tight" :class="integrityVerdict.color">{{ integrityVerdict.status }}</span>
+                  </div>
+                  <p class="text-[10px] text-theme-dim leading-relaxed font-medium pr-8">
+                    {{ integrityVerdict.recommendation }}
+                  </p>
                 </div>
-                <p class="text-[11px] text-slate-400 leading-relaxed font-medium pr-8">
-                  {{ integrityVerdict.recommendation }}
-                </p>
               </div>
 
-              <!-- Composition Analysis (Polished) -->
-              <div v-if="analysisSummary" class="p-8 bg-slate-950/60 rounded-[2.5rem] border border-white/10 space-y-6 shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-5">
-                   <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M11 2v20c-5.07 0-9.22-3.8-9.88-8.74L1 13H11V2M13 2.05L13 11H22.05C21.43 6.01 17.5 2.25 12.63 2.02M13 13V22.05C17.99 21.43 21.75 17.5 21.98 12.63L13 13Z"/></svg>
-                </div>
-                <div class="flex items-center justify-between mb-2">
-                  <h4 class="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em]">Text Composition</h4>
-                  <span class="text-[10px] text-slate-500 font-mono">{{ scanResult.sentences.length }} Sentences</span>
+              <!-- Compact Composition -->
+              <div v-if="analysisSummary" class="glass-card rounded-[2.5rem] p-8 space-y-6 relative overflow-hidden border border-white/5 shadow-xl transition-colors">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-[9px] font-black text-theme-dim uppercase tracking-[0.3em]">Text Composition</h4>
+                  <span class="text-[8px] text-theme-dim font-mono tracking-widest">{{ scanResult.sentences.length }} SENTENCES</span>
                 </div>
 
-                <div class="h-4 w-full bg-slate-800/50 rounded-full flex overflow-hidden border border-white/5 p-1 shadow-inner">
-                  <div :style="{ width: analysisSummary.identical + '%' }" class="h-full bg-red-500 rounded-full transition-all duration-1000 hover:scale-y-110 shadow-[0_0_15px_rgba(239,68,68,0.5)]"></div>
-                  <div :style="{ width: analysisSummary.paraphrased + '%' }" class="h-full bg-orange-500 rounded-full transition-all duration-1000 hover:scale-y-110 shadow-[0_0_15px_rgba(249,115,22,0.5)]"></div>
-                  <div :style="{ width: analysisSummary.mixed + '%' }" class="h-full bg-amber-500 rounded-full transition-all duration-1000 hover:scale-y-110 shadow-[0_0_15px_rgba(245,158,11,0.5)]"></div>
-                  <div :style="{ width: analysisSummary.human + '%' }" class="h-full bg-emerald-500 rounded-full transition-all duration-1000 hover:scale-y-110 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
+                <div class="h-1.5 w-full bg-slate-900 rounded-full flex overflow-hidden p-[1px]">
+                  <div :style="{ width: analysisSummary.identical + '%' }" class="h-full bg-red-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(239,68,68,0.3)]"></div>
+                  <div :style="{ width: analysisSummary.paraphrased + '%' }" class="h-full bg-orange-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(249,115,22,0.3)]"></div>
+                  <div :style="{ width: analysisSummary.mixed + '%' }" class="h-full bg-amber-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.3)]"></div>
+                  <div :style="{ width: analysisSummary.human + '%' }" class="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]"></div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-y-4 gap-x-6">
-                  <div class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
-                    <div class="flex flex-col">
-                      <span class="text-[11px] font-black text-white px-1 leading-none">{{ analysisSummary.identical }}% AI Identic</span>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 bg-orange-500 rounded-full shadow-[0_0_8px_rgba(249,115,22,0.6)]"></div>
-                    <div class="flex flex-col">
-                      <span class="text-[11px] font-black text-white px-1 leading-none">{{ analysisSummary.paraphrased }}% Parafrasa</span>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
-                    <div class="flex flex-col">
-                      <span class="text-[11px] font-black text-white px-1 leading-none">{{ analysisSummary.mixed }}% Campuran</span>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
-                    <div class="flex flex-col">
-                      <span class="text-[11px] font-black text-white px-1 leading-none">{{ analysisSummary.human }}% Manusia</span>
-                    </div>
+                <div class="grid grid-cols-2 gap-y-3 gap-x-4">
+                  <div v-for="(val, label, idx) in { 
+                    'AI Identic': { val: analysisSummary.identical, color: 'bg-red-500' },
+                    'Parafrasa': { val: analysisSummary.paraphrased, color: 'bg-orange-500' },
+                    'Campuran': { val: analysisSummary.mixed, color: 'bg-amber-500' },
+                    'Manusia': { val: analysisSummary.human, color: 'bg-emerald-500' }
+                  }" :key="idx" class="flex items-center gap-2">
+                    <div :class="val.color" class="w-1.5 h-1.5 rounded-full"></div>
+                    <span class="text-[9px] font-bold text-theme-dim transition-colors"><span class="text-theme-main">{{ val.val }}%</span> {{ label }}</span>
                   </div>
                 </div>
 
-                <!-- Report Action -->
-                <div class="pt-6 border-t border-white/5 space-y-4">
+                <!-- Action Button -->
+                <div class="pt-4 mt-2">
                   <button 
                     @click="downloadReport"
-                    class="w-full flex items-center justify-center gap-3 py-4.5 rounded-[1.5rem] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs uppercase tracking-[0.2em] transition-all transform active:scale-[0.97] group/report shadow-[0_15px_30px_-10px_rgba(79,70,229,0.4)] border border-white/20 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 relative overflow-hidden"
+                    class="w-full h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all transform active:scale-95 flex items-center justify-center gap-3 shadow-lg hover:shadow-indigo-500/20"
                   >
-                    <div class="absolute inset-0 bg-white/10 opacity-0 group-hover/report:opacity-100 transition-opacity"></div>
-                    <svg class="w-4.5 h-4.5 group-hover:translate-y-0.5 transition-transform relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span class="relative z-10">Unduh Laporan PDF (.pdf)</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Unduh Laporan PDF
                   </button>
-                  <p class="text-[9px] text-slate-500 text-center font-medium uppercase tracking-widest opacity-60">Laporan resmi SahihAksara &copy; 2025</p>
                 </div>
               </div>
             </div>
@@ -456,7 +470,13 @@ onMounted(() => {
             </div>
             
             <div v-else class="space-y-4 max-h-[450px] overflow-y-auto pr-3 custom-scrollbar">
-              <div v-for="item in scanHistory" :key="item.id" class="p-5 bg-slate-900/40 rounded-3xl border border-white/5 hover:border-purple-500/40 transition-all cursor-pointer group hover:bg-slate-900/60 shadow-lg relative overflow-hidden">
+              <div 
+                v-for="item in scanHistory" 
+                :key="item.id" 
+                @click="loadScanHistory(item)"
+                :class="scanResult?.id === item.id ? 'border-purple-500 bg-slate-900/80' : 'border-white/5 bg-slate-900/40'"
+                class="p-5 rounded-3xl border hover:border-purple-500/40 transition-all cursor-pointer group hover:bg-slate-900/60 shadow-lg relative overflow-hidden"
+              >
                 <div class="flex justify-between items-center mb-4">
                   <div class="flex items-center gap-2">
                     <div :class="getScoreColor(item.ai_probability)" class="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]"></div>
@@ -520,6 +540,7 @@ onMounted(() => {
         </p>
       </div>
     </footer>
+
   </div>
 </template>
 

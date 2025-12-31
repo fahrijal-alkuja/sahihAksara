@@ -114,17 +114,17 @@ definePageMeta({
             <div class="absolute -top-24 -right-24 w-64 h-64 bg-purple-600/10 blur-[100px] rounded-full group-hover:bg-purple-600/20 transition-all duration-1000"></div>
             
             <div class="flex items-center gap-6 relative z-10">
-                <NuxtLink to="/dashboard" class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-95">
+                <NuxtLink to="/dashboard" class="w-12 h-12 rounded-2xl bg-[var(--text-main)]/5 border border-theme flex items-center justify-center text-theme-main hover:bg-purple-500/10 hover:text-purple-500 transition-all active:scale-95">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </NuxtLink>
                 <div>
-                    <h1 class="text-3xl font-black font-heading tracking-tight mb-1">History Pembayaran</h1>
-                    <p class="text-content-muted font-medium tracking-wide">Lihat semua riwayat transaksi Anda di sini.</p>
+                    <h1 class="text-3xl font-black font-heading tracking-tight mb-1 text-theme-main">History Pembayaran</h1>
+                    <p class="text-theme-dim font-medium tracking-wide">Lihat semua riwayat transaksi Anda di sini.</p>
                 </div>
             </div>
             
             <div class="relative z-10">
-                <span class="text-[10px] font-black text-content-muted px-4 py-2 bg-white/5 rounded-full border border-white/5 uppercase tracking-[0.2em]">
+                <span class="text-[10px] font-black text-theme-dim px-4 py-2 bg-[var(--text-main)]/5 rounded-full border border-theme uppercase tracking-[0.2em]">
                     {{ transactions.length }} Transaksi Terdaftar
                 </span>
             </div>
@@ -138,11 +138,11 @@ definePageMeta({
             </div>
             
             <div v-else-if="transactions.length === 0" class="p-20 text-center space-y-4 flex flex-col items-center">
-                <div class="w-20 h-20 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-700 mb-4 blur-[0.5px]">
+                <div class="w-20 h-20 rounded-full bg-[var(--text-main)]/5 border border-theme flex items-center justify-center text-theme-dim mb-4 blur-[0.5px]">
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
-                <h3 class="text-lg font-bold text-content-muted">Belum Ada Transaksi</h3>
-                <p class="text-sm text-content-muted max-w-xs font-medium text-center">Anda belum pernah melakukan pembayaran. Silakan upgrade ke Pro untuk mendapatkan fitur lengkap.</p>
+                <h3 class="text-lg font-bold text-theme-main">Belum Ada Transaksi</h3>
+                <p class="text-sm text-theme-dim max-w-xs font-medium text-center">Anda belum pernah melakukan pembayaran. Silakan upgrade ke Pro untuk mendapatkan fitur lengkap.</p>
                 <NuxtLink to="/pricing" class="mt-4 px-8 py-3 bg-purple-600 hover:bg-purple-50 text-white hover:text-purple-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all active:scale-95 border border-purple-500/30">
                     Upgrade ke Pro Sekarang
                 </NuxtLink>
@@ -151,10 +151,10 @@ definePageMeta({
             <div v-else class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
-                        <tr class="bg-white/5 text-content-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-white/5">
+                        <tr class="bg-[var(--text-main)]/5 text-theme-dim text-[10px] font-black uppercase tracking-[0.3em] border-b border-theme">
                             <th class="px-10 py-6">Order ID</th>
-                            <th class="px-10 py-6">Paket</th>
-                            <th class="px-10 py-6">Jumlah</th>
+                            <th class="px-10 py-6 text-center lg:text-left">Paket</th>
+                            <th class="px-10 py-6 text-center lg:text-left">Jumlah</th>
                             <th class="px-10 py-6 text-center">Status</th>
                             <th class="px-10 py-6 text-right">Tanggal</th>
                         </tr>
@@ -163,15 +163,15 @@ definePageMeta({
                         <tr v-for="tx in transactions" :key="tx.id" class="hover:bg-white/[0.03] transition-all duration-300 group">
                             <td class="px-10 py-8 align-middle">
                                 <div class="flex flex-col gap-1">
-                                    <span class="text-sm font-bold text-white font-mono group-hover:text-purple-400 transition-colors uppercase">{{ tx.order_id }}</span>
-                                    <span class="text-[9px] text-content-muted font-black uppercase tracking-widest">Transaction #{{ tx.id }}</span>
+                                    <span class="text-sm font-bold text-theme-main font-mono group-hover:text-purple-500 transition-colors uppercase">{{ tx.order_id }}</span>
+                                    <span class="text-[9px] text-theme-dim font-black uppercase tracking-widest">Transaction #{{ tx.id }}</span>
                                 </div>
                             </td>
                             <td class="px-10 py-8 align-middle">
-                                <span class="text-xs font-bold text-white uppercase tracking-wider">{{ tx.plan_type === 'monthly' ? 'Bulanan' : 'Harian' }}</span>
+                                <span class="text-xs font-bold text-theme-main uppercase tracking-wider">{{ tx.plan_type === 'monthly' ? 'Bulanan' : 'Harian' }}</span>
                             </td>
                             <td class="px-10 py-8 align-middle">
-                                <span class="text-sm font-black text-white font-heading">{{ formatAmount(tx.amount) }}</span>
+                                <span class="text-sm font-black text-theme-main font-heading">{{ formatAmount(tx.amount) }}</span>
                             </td>
                             <td class="px-10 py-8 align-middle text-center">
                                 <div class="flex flex-col items-center gap-2">
@@ -189,7 +189,7 @@ definePageMeta({
                                 </div>
                             </td>
                             <td class="px-10 py-8 align-middle text-right">
-                                <span class="text-xs font-bold text-content-muted font-mono">{{ formatDate(tx.created_at) }}</span>
+                                <span class="text-xs font-bold text-theme-dim font-mono transition-colors">{{ formatDate(tx.created_at) }}</span>
                             </td>
                         </tr>
                     </tbody>
