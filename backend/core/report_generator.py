@@ -145,19 +145,13 @@ class ReportGenerator:
         pdf.cell(0, 10, "Analisis Musyawarah Digital (AI Insights)", ln=True)
         
         # Logic for automated insight
-        s_opinion = scan_data.get("opinion_semantic", 0)
-        p_opinion = scan_data.get("opinion_perplexity", 0)
-        b_opinion = scan_data.get("opinion_burstiness", 0)
-        
-        insight_bg = (248, 250, 252)
-        pdf.set_fill_color(*insight_bg)
-        pdf.rect(10, 125, 190, 45, 'F')
-        
-        pdf.set_xy(15, 128)
-        pdf.set_font("Arial", '', 10)
-        pdf.set_text_color(71, 85, 105)
+        s_opinion = scan_data.get("opinion_semantic") or 0
+        p_opinion = scan_data.get("opinion_perplexity") or 0
+        b_opinion = scan_data.get("opinion_burstiness") or 0
+        final_prob = scan_data.get("ai_probability", 0)
         
         insight_text = ""
+        # 1. Check for specific high signals
         if s_opinion > 70:
             insight_text += "- Model Semantik mendeteksi konstruksi kalimat yang sangat identik dengan pola generator bahasa (LLM).\n"
         if p_opinion > 70:
@@ -165,9 +159,23 @@ class ReportGenerator:
         if b_opinion > 50:
             insight_text += "- Ritme penulisan terdeteksi terlalu konsisten (monoton), minim variasi panjang kalimat yang biasa ada pada karya manusia.\n"
         
-        if not insight_text:
+        # 2. Fallback for High Probability but missing granular data (Legacy/Edge cases)
+        if not insight_text and final_prob > 70:
+            insight_text = "- Sistem mendeteksi tanda-tanda kuat otomatisasi linguistik. Struktur argumen dan frekuensi kata menunjukkan pola yang sangat mirip dengan keluaran AI generasi terbaru."
+        elif not insight_text:
             insight_text = "- Sistem mendeteksi variasi linguistik yang sehat. Pola kalimat acak dan memiliki karakteristik humanis yang kuat."
-            
+
+        # Calculate dynamic height for insight box
+        # Each line is roughly 6 units, plus padding
+        line_count = insight_text.count('\n') + 1
+        box_h = (line_count * 6) + 8
+        
+        pdf.set_fill_color(*insight_bg)
+        pdf.rect(10, 125, 190, box_h, 'F')
+        
+        pdf.set_xy(15, 128)
+        pdf.set_font("Arial", '', 10)
+        pdf.set_text_color(71, 85, 105)
         pdf.multi_cell(180, 6, self._sanitize_text(insight_text.strip()))
         
         # --- TEXT COMPOSITION ---

@@ -286,12 +286,23 @@ class AIDetector:
         elif final_prob < 75: status = "Likely AI"
         else: status = "AI Generated"
         
+        # Calculate granular counts for the return dict
+        # This replaces the logic that was partially moved to main.py
+        ai_count = sum(1 for s in detailed if s.get("score", 0) > 75)
+        para_count = sum(1 for s in detailed if 50 < s.get("score", 0) <= 75)
+        mix_count = sum(1 for s in detailed if 25 < s.get("score", 0) <= 50)
+        human_count = sum(1 for s in detailed if 0 <= s.get("score", 0) <= 25)
+
         return {
             "ai_probability": round(final_prob, 2),
             "perplexity": round(float(global_loss), 4),
             "burstiness": round(float(cv), 4),
             "status": status,
             "sentences": detailed,
+            "ai_count": ai_count,
+            "para_count": para_count,
+            "mix_count": mix_count,
+            "human_count": human_count,
             "partially_analyzed": partially_analyzed,
             "opinion_semantic": round(opinion_semantic, 2),
             "opinion_perplexity": round(opinion_perplexity, 2),
