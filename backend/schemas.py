@@ -65,6 +65,7 @@ class ScanResponse(ScanBase):
     opinion_perplexity: Optional[float] = None
     opinion_burstiness: Optional[float] = None
     opinion_humanity: Optional[float] = None
+    sha256_hash: Optional[str] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

@@ -269,3 +269,94 @@ class ReportGenerator:
                 if pdf.get_y() > 260: pdf.add_page()
         
         return bytes(pdf.output())
+
+    def generate_authenticity_certificate(self, cert_data: dict) -> bytes:
+        """
+        Generate a formal landscape-oriented Certificate of Authenticity.
+        """
+        # A4 Landscape: 297 x 210 mm
+        pdf = PDF(orientation='L', unit='mm', format='A4')
+        pdf.add_page()
+        
+        # --- BACKGROUND & BORDER ---
+        # Formal Double Border
+        pdf.set_draw_color(124, 58, 237) # Theme Purple
+        pdf.set_line_width(1.5)
+        pdf.rect(5, 5, 287, 200) # Outer
+        
+        pdf.set_line_width(0.5)
+        pdf.rect(8, 8, 281, 194) # Inner
+        
+        # --- DECORATIVE CORNERS (Simple lines) ---
+        # Top-Left
+        pdf.line(5, 25, 25, 5)
+        # Top-Right
+        pdf.line(272, 5, 292, 25)
+        
+        # --- HEADER ---
+        if os.path.exists(self.logo_path):
+            pdf.image(self.logo_path, 135, 15, 25)
+            
+        pdf.set_xy(10, 45)
+        pdf.set_font("Arial", 'B', 32)
+        pdf.set_text_color(30, 41, 59)
+        pdf.cell(0, 20, "CERTIFICATE OF AUTHENTICITY", ln=True, align='C')
+        
+        pdf.set_font("Arial", 'I', 14)
+        pdf.set_text_color(100, 116, 139)
+        pdf.cell(0, 10, "SahihAksara Digital Integrity Verification", ln=True, align='C')
+        
+        # --- BODY ---
+        pdf.ln(10)
+        pdf.set_font("Arial", '', 14)
+        pdf.set_text_color(51, 65, 85)
+        pdf.cell(0, 15, "Sertifikat ini diberikan secara resmi kepada:", ln=True, align='C')
+        
+        pdf.set_font("Arial", 'B', 24)
+        pdf.set_text_color(124, 58, 237)
+        pdf.cell(0, 20, self._sanitize_text(cert_data.get("full_name", "Verified User")).upper(), ln=True, align='C')
+        
+        pdf.set_font("Arial", '', 12)
+        pdf.set_text_color(71, 85, 105)
+        message = (
+            f"Atas karya tulisannya yang telah melalui analisis deteksi AI SahihAksara "
+            f"dengan skor probabilitas AI sebesar {cert_data.get('ai_probability')}%.\n"
+            f"Dokumen ini dinyatakan sebagai 'Karya Orisinal' dengan kontribusi manusia yang dominan."
+        )
+        pdf.multi_cell(0, 8, self._sanitize_text(message), align='C')
+        
+        # --- FOOTER / VERIFICATION AREA ---
+        # Verification QR (Right)
+        scan_id = cert_data.get("id", 0)
+        base_url = os.getenv("APP_URL", "https://sahihaksara.id")
+        verification_url = f"{base_url}/verify/{scan_id}"
+        qr_path = self._generate_qr(verification_url)
+        pdf.image(qr_path, 245, 155, 35, 35)
+        os.unlink(qr_path)
+        
+        # "Gold Seal" Placeholder (Left)
+        pdf.set_fill_color(254, 243, 199) # Amber 100
+        pdf.set_draw_color(245, 158, 11) # Amber 500
+        pdf.circle(40, 172, 12, 'FD')
+        pdf.set_font("Arial", 'B', 8)
+        pdf.set_text_color(146, 64, 14)
+        pdf.set_xy(30, 170)
+        pdf.cell(20, 5, "VERIFIED", align='C')
+        
+        # Details (Center)
+        pdf.set_xy(70, 155)
+        pdf.set_font("Arial", 'B', 10)
+        pdf.set_text_color(100, 116, 139)
+        pdf.cell(100, 5, f"CERTIFICATE ID: SA-CERT-{datetime.now().strftime('%Y%m%d')}-000{scan_id}", ln=True, align='L')
+        
+        pdf.set_xy(70, 162)
+        pdf.set_font("Arial", '', 10)
+        pdf.cell(100, 5, f"Issued Date: {cert_data.get('created_at')}", ln=True, align='L')
+        
+        # Fingerprint Footer
+        pdf.set_xy(10, 190)
+        pdf.set_font("Courier", '', 8)
+        pdf.set_text_color(148, 163, 184)
+        pdf.cell(0, 10, f"SHA-256 Fingerprint: {cert_data.get('sha256_hash')}", align='C')
+        
+        return bytes(pdf.output())

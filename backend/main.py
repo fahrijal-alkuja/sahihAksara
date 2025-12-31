@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse, Response, HTMLResponse, StreamingRes
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from langdetect import detect, DetectorFactory
+import hashlib
 DetectorFactory.seed = 0 # For consistent results
 from sqlalchemy.orm import Session
 import uvicorn
@@ -158,14 +159,18 @@ async def analyze_text(
     
     # 4. Save to database (Metadata persistent, sentences kept briefly)
     sentences = result.get("sentences", [])
-    ai_c = sum(1 for s in sentences if s.get("score", 0) > 70)
-    para_c = sum(1 for s in sentences if 40 < s.get("score", 0) <= 70)
-    mix_c = sum(1 for s in sentences if 15 < s.get("score", 0) <= 40)
-    human_c = sum(1 for s in sentences if s.get("score", 0) <= 15)
+    ai_c = sum(1 for s in sentences if s.get("score", 0) > 75)
+    para_c = sum(1 for s in sentences if 50 < s.get("score", 0) <= 75)
+    mix_c = sum(1 for s in sentences if 25 < s.get("score", 0) <= 50)
+    human_c = sum(1 for s in sentences if s.get("score", 0) <= 25)
+    
+    # Calculate Fingerprint (SHA-256)
+    text_hash = hashlib.sha256(request.text_content.encode()).hexdigest()
 
     db_result = models.ScanResult(
         user_id=current_user.id,
         text_content=request.text_content[:30] + "... [PURGED FOR PRIVACY]",
+        sha256_hash=text_hash,
         ai_probability=result["ai_probability"],
         perplexity=result["perplexity"],
         burstiness=result["burstiness"],
@@ -274,14 +279,18 @@ async def analyze_file(
     
     # 5. Save to DB (Metadata persistent, sentences kept briefly)
     sentences = result.get("sentences", [])
-    ai_c = sum(1 for s in sentences if s.get("score", 0) > 70)
-    para_c = sum(1 for s in sentences if 40 < s.get("score", 0) <= 70)
-    mix_c = sum(1 for s in sentences if 15 < s.get("score", 0) <= 40)
-    human_c = sum(1 for s in sentences if s.get("score", 0) <= 15)
+    ai_c = sum(1 for s in sentences if s.get("score", 0) > 75)
+    para_c = sum(1 for s in sentences if 50 < s.get("score", 0) <= 75)
+    mix_c = sum(1 for s in sentences if 25 < s.get("score", 0) <= 50)
+    human_c = sum(1 for s in sentences if s.get("score", 0) <= 25)
+    
+    # Calculate Fingerprint
+    text_hash = hashlib.sha256(text.encode()).hexdigest()
 
     db_result = models.ScanResult(
         user_id=current_user.id,
         text_content=file.filename[:30] + "... [PURGED FOR PRIVACY]",
+        sha256_hash=text_hash,
         ai_probability=result["ai_probability"],
         perplexity=result["perplexity"],
         burstiness=result["burstiness"],
@@ -349,6 +358,43 @@ async def generate_report(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=SahihAksara_Report_{scan_id}.pdf"}
+    )
+
+
+@app.get("/download-certificate/{scan_id}")
+async def download_certificate(scan_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+    scan = db.query(models.ScanResult).filter(models.ScanResult.id == scan_id).first()
+    if not scan:
+        raise HTTPException(status_code=404, detail="Hasil scan tidak ditemukan.")
+    
+    # Security: Only owner or admin
+    if scan.user_id != current_user.id and current_user.role != "admin":
+         raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke sertifikat ini.")
+    
+    # Threshold Check: Must be <= 30% AI
+    if scan.ai_probability > 30:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Sertifikat Keaslian hanya diterbitkan untuk skor AI di bawah 30% (Skor Anda: {scan.ai_probability}%)."
+        )
+    
+    # Prepare data
+    cert_data = {
+        "id": scan.id,
+        "ai_probability": scan.ai_probability,
+        "status": scan.status,
+        "created_at": scan.created_at.strftime("%B %d, %Y"),
+        "sha256_hash": scan.sha256_hash or "N/A",
+        "full_name": current_user.full_name or "Verified User"
+    }
+    
+    # Generate Cert (Landscape)
+    cert_bytes = report_gen.generate_authenticity_certificate(cert_data)
+    
+    return Response(
+        content=cert_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=SahihAksara_Certificate_{scan_id}.pdf"}
     )
 
 
@@ -669,6 +715,15 @@ async def verify_report(scan_id: int, db: Session = Depends(database.get_db)):
     # Format Date
     formatted_date = scan.created_at.strftime("%B %d, %Y")
     status_color = "#ef4444" if scan.ai_probability > 75 else "#f59e0b" if scan.ai_probability > 40 else "#10b981"
+    
+    # Certificate Status
+    cert_html = ""
+    if scan.ai_probability <= 30:
+        cert_html = """
+        <div style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #fde68a;">
+            <span>🏅</span> GOLD STATUS: Originality Certified
+        </div>
+        """
 
     # Minimalist verified UI
     return f"""
@@ -694,6 +749,7 @@ async def verify_report(scan_id: int, db: Session = Depends(database.get_db)):
             .label {{ font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }}
             .value {{ font-size: 20px; font-weight: 700; color: var(--slate); }}
             .score-badge {{ display: inline-block; padding: 4px 12px; border-radius: 999px; font-weight: 700; color: white; background: {status_color}; margin-top: 8px; }}
+            .fingerprint {{ font-family: monospace; font-size: 10px; color: #94a3b8; word-break: break-all; margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 10px; }}
             .footer {{ font-size: 12px; color: #94a3b8; margin-top: 32px; }}
             .logo {{ font-weight: 800; color: var(--primary); font-size: 18px; margin-bottom: 32px; display: block; }}
         </style>
@@ -701,6 +757,9 @@ async def verify_report(scan_id: int, db: Session = Depends(database.get_db)):
     <body>
         <div class="card">
             <span class="logo">SahihAksara</span>
+            
+            {cert_html}
+
             <div class="icon-check">✓</div>
             <h1>Laporan Asli (Verified)</h1>
             <span class="verified-tag">Dokumen Terverifikasi Digital</span>
@@ -717,6 +776,11 @@ async def verify_report(scan_id: int, db: Session = Depends(database.get_db)):
 
             <p style="font-size: 13px; color: #64748b; line-height: 1.6;">Laporan ini dinyatakan asli dan dikeluarkan oleh sistem SahihAksara AI Detector. Seluruh data pada dokumen fisik sesuai dengan record digital kami.</p>
             
+            <div class="fingerprint">
+                SHA-256 Fingerprint:<br>
+                {scan.sha256_hash or 'N/A'}
+            </div>
+
             <div class="footer">
                 &copy; 2025 SahihAksara Integrity System<br>
                 Universitas Kutai Kartanegara

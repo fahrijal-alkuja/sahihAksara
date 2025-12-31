@@ -38,6 +38,7 @@ class ScanResult(Base):
     opinion_perplexity = Column(Float, nullable=True)
     opinion_burstiness = Column(Float, nullable=True)
     opinion_humanity = Column(Float, nullable=True)
+    sha256_hash = Column(String, nullable=True) # Digital Fingerprint for Certificate
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     owner = relationship("User", back_populates="scans")
