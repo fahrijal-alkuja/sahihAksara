@@ -407,6 +407,12 @@ async def create_payment(
         )
         response.raise_for_status()
         data = response.json()
+        
+        # Save Snap Token
+        if "token" in data:
+            new_tx.snap_token = data["token"]
+            db.commit()
+            
         return data # {token, redirect_url}
     except Exception as e:
         db.delete(new_tx)
@@ -471,6 +477,30 @@ async def payment_webhook(request: Request, db: Session = Depends(database.get_d
 @app.get("/payments/webhook")
 async def payment_webhook_verify():
     return {"message": "SahihAksara Payment Webhook is Active"}
+
+@app.get("/payments/history", response_model=List[schemas.TransactionResponse])
+async def get_payment_history(
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    history = db.query(models.Transaction).filter(
+        models.Transaction.user_id == current_user.id
+    ).order_by(models.Transaction.created_at.desc()).all()
+    return history
+
+
+@app.get("/health/gateway")
+async def check_gateway_health():
+    """
+    Checks if the payment gateway (UnikaPay) is online.
+    """
+    try:
+        response = requests.get(f"{UNIKAPAY_BASE_URL}/gateway/health", timeout=3)
+        if response.status_code == 200:
+            return {"online": True}
+        return {"online": False, "status_code": response.status_code}
+    except Exception as e:
+        return {"online": False, "error": str(e)}
 
 @app.get("/health")
 async def health_check():

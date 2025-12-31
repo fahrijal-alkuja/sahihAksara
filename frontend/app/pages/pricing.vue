@@ -3,6 +3,16 @@ const { token, user, isAuthenticated } = useAuth()
 const { notify, warning, error: notifyError } = useNotify()
 const settings = ref<any[]>([])
 const isLoading = ref(true)
+const isGatewayOnline = ref(true)
+
+const checkGatewayHealth = async () => {
+  try {
+    const data = await $fetch<{ online: boolean }>('http://localhost:8000/health/gateway')
+    isGatewayOnline.value = data.online
+  } catch (err) {
+    isGatewayOnline.value = false
+  }
+}
 
 const plans = {
   free: [
@@ -114,7 +124,10 @@ const handleUpgrade = async (planType: string) => {
   }
 }
 
-onMounted(fetchSettings)
+onMounted(() => {
+  fetchSettings()
+  checkGatewayHealth()
+})
 
 definePageMeta({
   layout: 'default'
@@ -130,6 +143,13 @@ definePageMeta({
     </div>
 
     <div class="max-w-4xl mx-auto space-y-16 relative z-10">
+      <!-- System Alert -->
+      <SystemAlert 
+        :show="!isGatewayOnline" 
+        type="warning" 
+        message="Sistem pembayaran pihak ketiga (UnikaPay) sedang mengalami gangguan teknis. Proses upgrade Pro sementara tidak dapat dilakukan."
+      />
+
       <!-- Header -->
       <div class="text-center space-y-4">
         <h1 class="text-5xl md:text-7xl font-black transition-colors tracking-tighter font-heading">
@@ -143,7 +163,8 @@ definePageMeta({
       <!-- Pricing List (Horizontal Pattern) -->
       <div class="space-y-6">
         <!-- 1. Day Pass (Starter) -->
-        <div @click="handleUpgrade('daily')" 
+        <div @click="isGatewayOnline ? handleUpgrade('daily') : null" 
+             :class="{'opacity-50 grayscale cursor-not-allowed': !isGatewayOnline}"
              class="group relative glass-panel p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer hover:border-amber-500/30 transition-all duration-500 hover:scale-[1.01]">
           <div class="flex flex-col md:flex-row md:items-center gap-6">
             <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-3xl shrink-0 group-hover:bg-amber-500/20 transition-all">
@@ -182,7 +203,8 @@ definePageMeta({
         </div>
 
         <!-- 2. Pro Monthly (Most Popular) -->
-        <div @click="handleUpgrade('monthly')" 
+        <div @click="isGatewayOnline ? handleUpgrade('monthly') : null" 
+             :class="{'opacity-50 grayscale cursor-not-allowed': !isGatewayOnline}"
              class="group relative glass-panel p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer border-purple-500/30 ring-1 ring-purple-500/20 hover:border-purple-500/50 transition-all duration-500 hover:scale-[1.01] overflow-hidden">
           <!-- Most Popular Badge -->
           <div class="absolute -top-1 -right-1">

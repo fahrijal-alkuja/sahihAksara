@@ -2,9 +2,21 @@
 const { user, fetchMe, logout, initiateUpgrade, token } = useAuth()
 const { scanHistory, fetchHistory, clearHistory } = useScanner()
 
+const isGatewayOnline = ref(true)
+
+const checkGatewayHealth = async () => {
+    try {
+        const data = await $fetch<{ online: boolean }>('http://localhost:8000/health/gateway')
+        isGatewayOnline.value = data.online
+    } catch (err) {
+        isGatewayOnline.value = false
+    }
+}
+
 onMounted(async () => {
   await fetchMe()
   await fetchHistory()
+  checkGatewayHealth()
 })
 
 const getStatusColor = (prob: number) => {
@@ -36,6 +48,12 @@ definePageMeta({
 
 <template>
   <div class="max-w-7xl mx-auto px-6 py-12 space-y-12 relative z-10">
+    <SystemAlert 
+      :show="!isGatewayOnline" 
+      type="warning" 
+      message="Sistem pembayaran UnikaPay terdeteksi sedang offline. Beberapa fitur mungkin terbatas."
+    />
+
     <!-- Profile Header (Premium Glass) -->
     <div class="glass-panel p-10 flex flex-col md:flex-row items-center justify-between gap-10 relative overflow-hidden group">
       <!-- Background Ambient Glow -->
@@ -84,13 +102,17 @@ definePageMeta({
       <div class="flex flex-wrap gap-4 relative z-10">
         <button 
           v-if="user?.role === 'free'" 
-          @click="initiateUpgrade"
+          @click="isGatewayOnline ? initiateUpgrade() : null"
+          :class="{'opacity-50 grayscale cursor-not-allowed': !isGatewayOnline}"
           class="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-500 hover:to-orange-600 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-amber-500/20 active:scale-95 border border-white/10"
         >
           Upgrade ke Pro
         </button>
         <NuxtLink v-if="user?.role === 'admin'" to="/admin/dashboard" class="flex items-center gap-3 px-8 py-4 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 shadow-lg shadow-purple-500/10">
           Admin Panel
+        </NuxtLink>
+        <NuxtLink to="/history-pembayaran" class="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-content-muted hover:text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl border border-white/5 transition-all active:scale-95">
+          History Pembayaran
         </NuxtLink>
         <button @click="logout" class="px-8 py-4 bg-white/5 hover:bg-white/10 text-content-muted hover:text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl border border-white/5 transition-all active:scale-95">
           Sign Out

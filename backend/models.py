@@ -47,6 +47,7 @@ class Transaction(Base):
     amount = Column(Float)
     plan_type = Column(String) # 'daily', 'monthly'
     status = Column(String, default="pending") # pending, settlement, expire
+    snap_token = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User")

@@ -58,10 +58,21 @@ try:
         print("✅ Added plan_type to transactions")
     except Exception as e:
         db.rollback()
-        if "already exists" in str(e):
+        if "already exists" in str(e) or "duplicate column" in str(e).lower():
             print("ℹ️ plan_type already exists in transactions")
         else:
             print(f"❌ Error adding plan_type to transactions: {e}")
+
+    try:
+        db.execute(text("ALTER TABLE transactions ADD COLUMN snap_token VARCHAR;"))
+        db.commit()
+        print("✅ Added snap_token to transactions")
+    except Exception as e:
+        db.rollback()
+        if "already exists" in str(e) or "duplicate column" in str(e).lower():
+            print("ℹ️ snap_token already exists in transactions")
+        else:
+            print(f"❌ Error adding snap_token to transactions: {e}")
 
     # 3. Tables like 'transactions' will be created by create_all in main.py 
     # but let's be sure

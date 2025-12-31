@@ -64,3 +64,15 @@ class ScanResponse(ScanBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class TransactionResponse(BaseModel):
+    id: int
+    user_id: int
+    order_id: str
+    amount: float
+    plan_type: str
+    status: str
+    snap_token: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
