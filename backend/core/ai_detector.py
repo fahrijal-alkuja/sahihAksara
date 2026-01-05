@@ -5,6 +5,7 @@ import numpy as np
 import re
 from .citation_handler import CitationHandler
 from .fingerprint_analyzer import FingerprintAnalyzer
+import logging
 
 class AIDetector:
     def __init__(self, model_name="indolem/indobert-base-uncased"):
@@ -306,14 +307,14 @@ class AIDetector:
         final_prob = ensemble_score - calculated_bonus
         final_prob = float(max(0, min(100, final_prob)))
 
-        # Console Debug for Admin to see the "Musyawarah"
-        print(f"--- ENSEMBLE DEBATE (FINAL ALIGNMENT) ---")
-        print(f"1. Semantic Opinion: {opinion_semantic:.2f}")
-        print(f"2. Perplexity Opinion: {opinion_perplexity:.2f}")
-        print(f"3. Burstiness Opinion: {opinion_burstiness:.2f}")
-        print(f"4. Humanity Bonus: -{calculated_bonus:.2f}")
-        print(f"=> FINAL ENSEMBLE SCORE: {final_prob:.2f}% AI Probability")
-        print(f"-----------------------")
+        # Logging Debug for Admin to see the "Musyawarah"
+        logging.info(f"--- ENSEMBLE DEBATE (FINAL ALIGNMENT) ---")
+        logging.info(f"1. Semantic Opinion: {opinion_semantic:.2f}")
+        logging.info(f"2. Perplexity Opinion: {opinion_perplexity:.2f}")
+        logging.info(f"3. Burstiness Opinion: {opinion_burstiness:.2f}")
+        logging.info(f"4. Humanity Bonus: -{calculated_bonus:.2f}")
+        logging.info(f"=> FINAL ENSEMBLE SCORE: {final_prob:.2f}% AI Probability")
+        logging.info(f"-----------------------")
 
         # Status Mapping
         if final_prob < 20: status = "Human Written"

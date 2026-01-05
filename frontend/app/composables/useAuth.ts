@@ -1,4 +1,5 @@
 export const useAuth = () => {
+  const config = useRuntimeConfig()
   const token = useCookie('auth_token', { maxAge: 60 * 60 * 24 }) // 1 day
   const user = useState<any>('user', () => null)
   const isAuthenticated = computed(() => !!token.value)
@@ -10,7 +11,7 @@ export const useAuth = () => {
       formData.append('username', credentials.email)
       formData.append('password', credentials.password)
 
-      const data = await $fetch<any>('http://localhost:8000/login', {
+      const data = await $fetch<any>(`${config.public.apiUrl}/login`, {
         method: 'POST',
         body: formData
       })
@@ -26,7 +27,7 @@ export const useAuth = () => {
 
   const register = async (userData: any) => {
     try {
-      const data = await $fetch<any>('http://localhost:8000/register', {
+      const data = await $fetch<any>(`${config.public.apiUrl}/register`, {
         method: 'POST',
         body: userData
       })
@@ -40,7 +41,7 @@ export const useAuth = () => {
   const fetchMe = async () => {
     if (!token.value) return
     try {
-      const data = await $fetch<any>('http://localhost:8000/me', {
+      const data = await $fetch<any>(`${config.public.apiUrl}/me`, {
         headers: { Authorization: `Bearer ${token.value}` }
       })
       user.value = data

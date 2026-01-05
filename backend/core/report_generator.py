@@ -3,6 +3,7 @@ import os
 import qrcode
 import tempfile
 from datetime import datetime
+from .config import settings
 
 class PDF(FPDF):
     def __init__(self, *args, **kwargs):
@@ -83,8 +84,7 @@ class ReportGenerator:
         # --- VERIFICATION QR ---
         # Live Verification Link (Points to our public verify endpoint)
         scan_id = scan_data.get("id", 0)
-        # Note: In production, this should be the real domain
-        base_url = os.getenv("APP_URL", "https://sahihaksara.id")
+        base_url = settings.APP_URL
         verification_url = f"{base_url}/verify/{scan_id}"
         
         qr_path = self._generate_qr(verification_url)
@@ -369,7 +369,7 @@ class ReportGenerator:
         # --- FOOTER / VERIFICATION AREA ---
         # Verification QR (Right)
         scan_id = cert_data.get("id", 0)
-        base_url = os.getenv("APP_URL", "https://sahihaksara.id")
+        base_url = settings.APP_URL
         verification_url = f"{base_url}/verify/{scan_id}"
         qr_path = self._generate_qr(verification_url)
         pdf.image(qr_path, 248, 155, 32, 32)

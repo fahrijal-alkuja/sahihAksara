@@ -1,4 +1,5 @@
 export const useScanner = () => {
+  const config = useRuntimeConfig()
   const { token, logout } = useAuth()
   const { showModal, error, notify } = useNotify()
   const scanResult = useState<any>('scanResult', () => null)
@@ -14,7 +15,7 @@ export const useScanner = () => {
     
     isScanning.value = true
     try {
-      const data = await $fetch<any>('http://localhost:8000/analyze', {
+      const data = await $fetch<any>(`${config.public.apiUrl}/analyze`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token.value}` },
         body: { text_content: text }
@@ -47,7 +48,7 @@ export const useScanner = () => {
     formData.append('file', file)
     
     try {
-      const data = await $fetch<any>('http://localhost:8000/analyze-file', {
+      const data = await $fetch<any>(`${config.public.apiUrl}/analyze-file`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token.value}` },
         body: formData
@@ -76,7 +77,7 @@ export const useScanner = () => {
   const fetchHistory = async () => {
     if (!token.value) return
     try {
-      const data = await $fetch<any[]>('http://localhost:8000/history', {
+      const data = await $fetch<any[]>(`${config.public.apiUrl}/history`, {
         headers: { Authorization: `Bearer ${token.value}` }
       })
       if (data) {
@@ -91,7 +92,7 @@ export const useScanner = () => {
   const clearHistory = async () => {
     if (!token.value) return
     try {
-      await $fetch('http://localhost:8000/history', {
+      await $fetch(`${config.public.apiUrl}/history`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token.value}` }
       })

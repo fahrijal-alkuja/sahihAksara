@@ -1,0 +1,16 @@
+[Unit]
+Description=SahihAksara Nuxt Frontend
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/sahihaksara/frontend
+EnvironmentFile=/var/www/sahihaksara/frontend/.env
+ExecStart=/usr/bin/node .output/server/index.mjs
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

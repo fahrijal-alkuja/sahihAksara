@@ -27,19 +27,12 @@ import hmac
 import hashlib
 import logging
 from fastapi import Request
-from dotenv import load_dotenv
-import datetime
-from datetime import timedelta
-
-load_dotenv()
-
-UNIKAPAY_API_KEY = os.getenv("UNIKAPAY_API_KEY")
-UNIKAPAY_BASE_URL = os.getenv("UNIKAPAY_BASE_URL")
+from core.config import settings
 
 # Initialize database
 models.Base.metadata.create_all(bind=database.engine)
 
-app = FastAPI(title="SahihAksara API", description="API for Indonesian AI Content Detection")
+app = FastAPI(title=settings.PROJECT_NAME, description="API for Indonesian AI Content Detection")
 
 # --- PRIVACY SHIELD ---
 app.add_middleware(PrivacyShieldMiddleware)
@@ -96,12 +89,16 @@ def get_me(current_user: models.User = Depends(get_current_user)):
 # --- SERVICES ---
 detector = AIDetector()
 doc_processor = DocumentProcessor()
-report_gen = ReportGenerator()
+# Use absolute path for logo to avoid issues with different CWDs
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+logo_path = os.path.join(BASE_DIR, "assets", "logo.png")
+report_gen = ReportGenerator(logo_path=logo_path)
 
 # Setup CORS for Nuxt.js frontend
+# Setup CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -467,7 +464,7 @@ async def create_payment(
     
     try:
         response = requests.post(
-            f"{UNIKAPAY_BASE_URL}/gateway/api/pay",
+            f"{settings.UNIKAPAY_BASE_URL}/gateway/api/pay",
             json=payload,
             headers=headers
         )
@@ -496,7 +493,7 @@ async def payment_webhook(request: Request, db: Session = Depends(database.get_d
         
     # 2. Verify Signature (HMAC-SHA512)
     expected_signature = hmac.new(
-        UNIKAPAY_API_KEY.encode(),
+        settings.UNIKAPAY_API_KEY.encode(),
         raw_body,
         hashlib.sha512
     ).hexdigest()
@@ -561,7 +558,7 @@ async def check_gateway_health():
     Checks if the payment gateway (UnikaPay) is online.
     """
     try:
-        response = requests.get(f"{UNIKAPAY_BASE_URL}/gateway/health", timeout=3)
+        response = requests.get(f"{settings.UNIKAPAY_BASE_URL}/gateway/health", timeout=3)
         if response.status_code == 200:
             return {"online": True}
         return {"online": False, "status_code": response.status_code}

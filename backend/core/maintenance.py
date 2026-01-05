@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 import models
 import datetime
 from typing import Optional
+import logging
 
 def purge_sensitive_data(db: Session, older_than_hours: int = 1):
     """
@@ -69,15 +70,27 @@ def vacuum_database(db: Session):
         db.commit()
         # Get raw connection
         connection = db.bind.raw_connection()
-        connection.set_isolation_level(0) # AUTOCOMMIT
-        cursor = connection.cursor()
-        print("Starting physical database vacuum...")
-        cursor.execute("VACUUM ANALYZE scan_results;")
-        cursor.execute("REINDEX TABLE scan_results;")
-        cursor.close()
+        
+        # Check dialect
+        dialect = db.bind.dialect.name
+        
+        if dialect == "sqlite":
+            logging.info("Starting SQLite vacuum...")
+            cursor = connection.cursor()
+            cursor.execute("VACUUM;")
+            cursor.close()
+        else:
+            # PostgreSQL specific
+            connection.set_isolation_level(0) # AUTOCOMMIT
+            cursor = connection.cursor()
+            logging.info("Starting physical database vacuum (PostgreSQL)...")
+            cursor.execute("VACUUM ANALYZE scan_results;")
+            cursor.execute("REINDEX TABLE scan_results;")
+            cursor.close()
+            
         connection.close()
-        print("Database optimization complete.")
+        logging.info("Database optimization complete.")
         return True
     except Exception as e:
-        print(f"Vacuum error: {e}")
+        logging.error(f"Vacuum error: {e}")
         return False

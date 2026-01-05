@@ -1,4 +1,5 @@
 <script setup>
+const config = useRuntimeConfig()
 const { isAuthenticated, user, logout, token, fetchMe } = useAuth()
 const { notify, warning, error, showModal } = useNotify()
 const { scanResult, isScanning, scanHistory, scanText, uploadFile, fetchHistory } = useScanner()
@@ -33,14 +34,14 @@ const handleFileUpload = async (event) => {
 
 const downloadReport = () => {
   if (!scanResult.value?.id) return
-  window.open(`http://localhost:8000/report/${scanResult.value.id}?token=${token.value}`, '_blank')
+  window.open(`${config.public.apiUrl}/report/${scanResult.value.id}?token=${token.value}`, '_blank')
 }
 
 
 
 const downloadCertificate = () => {
   if (!scanResult.value?.id) return
-  window.open(`http://localhost:8000/download-certificate/${scanResult.value.id}?token=${token.value}`, '_blank')
+  window.open(`${config.public.apiUrl}/download-certificate/${scanResult.value.id}?token=${token.value}`, '_blank')
 }
 
 
